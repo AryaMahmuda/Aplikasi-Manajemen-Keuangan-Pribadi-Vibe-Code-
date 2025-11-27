@@ -1,25 +1,26 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen Keuangan Pribadi</title>
-    
+
     <!-- Bulma CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
-    
+
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
+
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <!-- jsPDF & AutoTable -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -35,31 +36,31 @@
             --text-main: #363636;
             --bg-main: #fcfcfc;
             --card-bg: #ffffff;
-            
+
             /* Light Mode Table Colors */
-            --row-even: #f0f8ff; /* AliceBlue-ish for distinct diff */
+            --row-even: #f0f8ff;
             --row-odd: #ffffff;
             --modal-content-bg: #ffffff;
             --modal-head-foot-bg: #f5f5f5;
-            
+
             --input-bg: #ffffff;
             --input-border: #dbdbdb;
             --input-text: #363636;
         }
 
-        /* Dark Mode Variables - High Contrast Fix */
+        /* Dark Mode Variables */
         body.dark-mode {
             --text-main: #e0e0e0;
             --bg-main: #0b1a26;
-            --card-bg: #03254c; /* Dark Blue Base */
-            
-            /* Dark Mode Table Colors - Distinct Alternating */
-            --row-even: #0a3d6b; /* Lighter than card bg */
-            --row-odd: #052c52;  /* Slightly darker/different shade */
-            
+            --card-bg: #03254c;
+
+            /* Dark Mode Table Colors */
+            --row-even: #0a3d6b;
+            --row-odd: #052c52;
+
             --modal-content-bg: #03254c;
-            --modal-head-foot-bg: #021a36; /* Darker for contrast */
-            
+            --modal-head-foot-bg: #021a36;
+
             --input-bg: #06386e;
             --input-border: #2a9df4;
             --input-text: #ffffff;
@@ -87,8 +88,10 @@
             padding: 2rem 1rem;
             position: fixed;
             height: 100vh;
-            transition: transform 0.3s ease;
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
             z-index: 1000;
+            left: 0;
+            top: 0;
         }
 
         .sidebar .menu-label {
@@ -104,7 +107,8 @@
             gap: 10px;
         }
 
-        .sidebar .menu-list a:hover, .sidebar .menu-list a.is-active {
+        .sidebar .menu-list a:hover,
+        .sidebar .menu-list a.is-active {
             background-color: var(--color-primary);
             color: white;
         }
@@ -114,45 +118,89 @@
             margin-left: 260px;
             padding: 2rem;
             position: relative;
-            /* Prevent overflow content from breaking layout */
             overflow-x: hidden;
+            width: 100%;
         }
 
-        /* Mobile Responsive */
+        /* --- COMPLEX ANIMATED BURGER MENU (CSS ONLY) --- */
         .burger-menu {
             display: none;
-            position: absolute;
-            top: 1rem;
-            left: 1rem;
-            z-index: 1002;
-            color: var(--color-primary);
+            /* Hidden on Desktop */
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            z-index: 2000;
+            /* Higher than sidebar */
+            width: 30px;
+            height: 20px;
             cursor: pointer;
-            font-size: 2rem;
+            background: transparent;
+            border: none;
+            padding: 0;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
+        .burger-menu span {
+            display: block;
+            width: 100%;
+            height: 3px;
+            background-color: var(--color-primary);
+            border-radius: 4px;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            /* Complex Easing */
+            transform-origin: center;
+        }
+
+        /* Active State (X Animation) */
+        .burger-menu.is-active span:nth-child(1) {
+            transform: translateY(8.5px) rotate(45deg);
+        }
+
+        .burger-menu.is-active span:nth-child(2) {
+            opacity: 0;
+            transform: scale(0);
+            /* Shrink effect */
+        }
+
+        .burger-menu.is-active span:nth-child(3) {
+            transform: translateY(-8.5px) rotate(-45deg);
+        }
+
+        /* Responsive Sidebar Logic */
         @media (max-width: 1023px) {
             .sidebar {
-                transform: translateY(-100%);
-                width: 100%;
-                height: auto;
-                position: absolute;
-                top: 0;
-                left: 0;
-                padding-top: 4rem;
-                text-align: right; 
+                transform: translateX(-100%);
+                /* Slide from Left */
+                width: 260px;
+                /* Standard drawer width */
+                box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
+                padding-top: 6rem;
+                /* Space for X button */
+                text-align: left;
+                /* Align Left */
             }
+
             .sidebar.is-active {
-                transform: translateY(0);
+                transform: translateX(0);
             }
+
             .sidebar .menu-list a {
-                justify-content: flex-end;
+                justify-content: flex-start;
+                /* Items align left */
+                padding-left: 1rem;
             }
+
             .content-area {
                 margin-left: 0;
-                padding-top: 4rem;
+                padding-top: 5rem;
+                padding-left: 1rem;
+                padding-right: 1rem;
             }
+
             .burger-menu {
-                display: block;
+                display: flex;
+                /* Show on mobile/tablet */
             }
         }
 
@@ -172,7 +220,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         /* Components */
@@ -180,55 +228,69 @@
             background-color: var(--card-bg);
             color: var(--text-main);
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             margin-bottom: 1.5rem;
             position: relative;
             transition: transform 0.2s;
         }
-        
+
         .card:hover {
             transform: translateY(-2px);
         }
 
-        .card .title, .card .subtitle, .label {
-            color: var(--text-main);
+        /* FIX: Apply text color globally to all titles, subtitles, and labels to override Bulma defaults */
+        .title,
+        .subtitle,
+        .label {
+            color: var(--text-main) !important;
         }
 
-        /* Input Styles with Theme Support */
-        .input, .select select, .textarea {
+        /* Input Styles */
+        .input,
+        .select select,
+        .textarea {
             background-color: var(--input-bg);
             border-color: var(--input-border);
             color: var(--input-text);
         }
-        .input::placeholder, .textarea::placeholder {
+
+        .input::placeholder,
+        .textarea::placeholder {
             color: #888;
         }
-        /* Fix select arrow color in dark mode if needed (Bulma default is usually ok, but ensuring) */
+
         body.dark-mode .select:not(.is-multiple):not(.is-loading)::after {
             border-color: var(--color-primary);
         }
 
-        /* Tables */
+        /* Tables & Scrolling - FIXED */
         .table-responsive-wrapper {
+            display: block;
+            width: 100%;
+            max-width: 100%;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--input-border);
         }
-        
+
         table.table {
             background-color: var(--card-bg);
             color: var(--text-main);
             width: 100%;
             border-collapse: collapse;
+            min-width: 600px;
         }
 
         table.table th {
             color: var(--text-main);
-            background-color: var(--color-primary); 
+            background-color: var(--color-primary);
             color: white !important;
             border: none;
-            white-space: nowrap; /* Keep headers single line */
+            white-space: nowrap;
         }
-        
+
         table.table td {
             border: none;
             vertical-align: middle;
@@ -236,23 +298,23 @@
             padding: 0.75rem;
         }
 
-        /* Nth Child Coloring - No Hover */
         table.table tbody tr:nth-child(odd) {
             background-color: var(--row-odd);
         }
+
         table.table tbody tr:nth-child(even) {
             background-color: var(--row-even);
         }
-        
-        /* Description Column Limiter for PDF/View */
+
         .col-desc {
-            max-width: 250px;
+            min-width: 200px;
+            max-width: 300px;
             white-space: normal;
             word-wrap: break-word;
             word-break: break-word;
         }
 
-        /* Icon Buttons Top Right */
+        /* Icon Buttons */
         .top-right-actions {
             position: absolute;
             top: 15px;
@@ -263,27 +325,38 @@
         }
 
         /* Custom Colors */
-        .has-text-success-custom { color: #2ecc71; }
-        .has-text-danger-custom { color: #e74c3c; }
+        .has-text-success-custom {
+            color: #2ecc71;
+        }
 
-        /* Specific Page Styles */
+        .has-text-danger-custom {
+            color: #e74c3c;
+        }
+
         .saldo-card {
             background: linear-gradient(135deg, var(--color-dark-bg), var(--color-primary));
             color: white !important;
         }
-        .saldo-card .title, .saldo-card .subtitle { color: white !important; }
+
+        .saldo-card .title,
+        .saldo-card .subtitle {
+            color: white !important;
+        }
 
         /* Tabs Vertical */
         .tabs-vertical-container {
             display: grid;
-            grid-template-columns: 200px 1fr;
+            grid-template-columns: 200px minmax(0, 1fr);
             gap: 1.5rem;
+            width: 100%;
         }
+
         @media (max-width: 768px) {
             .tabs-vertical-container {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 1fr);
             }
         }
+
         .vertical-tabs a {
             display: block;
             padding: 12px 15px;
@@ -292,37 +365,42 @@
             border-radius: 6px;
             border-left: 4px solid transparent;
             cursor: pointer;
-            color: var(--text-main); /* Ensure visible text in dark mode */
+            color: var(--text-main);
             transition: background 0.2s;
         }
+
         .vertical-tabs a:hover {
             background-color: var(--row-even);
         }
+
         .vertical-tabs a.is-active {
             border-left-color: var(--color-primary);
-            background: var(--row-even); /* Use row color for active bg */
+            background: var(--row-even);
             font-weight: bold;
             color: var(--color-primary);
         }
 
-        /* Modal Styling Fixes */
-        .modal-card-head, .modal-card-foot {
+        /* Modal */
+        .modal-card-head,
+        .modal-card-foot {
             background-color: var(--modal-head-foot-bg);
             border-color: var(--input-border);
         }
+
         .modal-card-title {
             color: var(--text-main);
         }
+
         .modal-card-body {
             background-color: var(--modal-content-bg);
             color: var(--text-main);
         }
-        /* Footer buttons right aligned */
+
         .modal-card-foot {
             justify-content: flex-end;
         }
-        
-        /* Summary Stats Text */
+
+        /* Summary Text */
         .summary-text-block {
             background: var(--row-even);
             border-left: 4px solid var(--color-primary);
@@ -332,22 +410,25 @@
             font-size: 0.95rem;
             color: var(--text-main);
         }
+
         .summary-text-block p {
             margin-bottom: 4px;
         }
-        
-        /* Toggle Button Custom */
+
+        /* Toggle Buttons */
         .toggle-btn-group .button {
             border: 1px solid var(--input-border);
             color: var(--text-main);
             background-color: var(--card-bg);
         }
+
         .toggle-btn-group .button.is-selected-success {
             background-color: #2ecc71;
             color: white;
             border-color: #2ecc71;
             z-index: 2;
         }
+
         .toggle-btn-group .button.is-selected-danger {
             background-color: #e74c3c;
             color: white;
@@ -355,18 +436,24 @@
             z-index: 2;
         }
 
-        /* Sort Button Active State */
         .button.is-sort-active {
             background-color: var(--color-primary);
             color: white;
             border-color: var(--color-primary);
         }
-        
+
         /* Utilities */
-        .is-hidden { display: none !important; }
-        .is-vcentered { display: flex; align-items: center; }
+        .is-hidden {
+            display: none !important;
+        }
+
+        .is-vcentered {
+            display: flex;
+            align-items: center;
+        }
     </style>
 </head>
+
 <body>
 
     <!-- Theme Toggle -->
@@ -374,40 +461,43 @@
         <i class="ph ph-moon" id="theme-icon"></i>
     </div>
 
-    <!-- Burger Menu -->
-    <div class="burger-menu" onclick="toggleSidebar()">
-        <i class="ph ph-list"></i>
+    <!-- Animated Burger Menu -->
+    <div class="burger-menu" onclick="toggleSidebar()" aria-label="Toggle Menu">
+        <span></span>
+        <span></span>
+        <span></span>
     </div>
 
     <div class="main-container">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
-            <div class="has-text-right p-4 is-hidden-desktop" onclick="toggleSidebar()">
-                <i class="ph ph-x" style="font-size: 1.5rem; cursor: pointer;"></i>
-            </div>
-            <p class="menu-label pl-6">Aplikasi Keuangan</p>
+            <p class="menu-label pl-4">Aplikasi Keuangan</p>
             <ul class="menu-list">
-                <li><a onclick="navigate('dashboard')" id="nav-dashboard" class="is-active"><i class="ph ph-squares-four"></i> Dashboard</a></li>
-                <li><a onclick="navigate('catatan')" id="nav-catatan"><i class="ph ph-notebook"></i> Catatan Transaksi</a></li>
-                <li><a onclick="navigate('penyimpanan')" id="nav-penyimpanan"><i class="ph ph-wallet"></i> Penyimpanan</a></li>
-                <li><a onclick="navigate('transfer')" id="nav-transfer"><i class="ph ph-arrows-left-right"></i> Transfer</a></li>
+                <li><a onclick="navigate('dashboard')" id="nav-dashboard" class="is-active"><i
+                            class="ph ph-squares-four"></i> Dashboard</a></li>
+                <li><a onclick="navigate('catatan')" id="nav-catatan"><i class="ph ph-notebook"></i> Catatan
+                        Transaksi</a></li>
+                <li><a onclick="navigate('penyimpanan')" id="nav-penyimpanan"><i class="ph ph-dresser"></i>
+                        Penyimpanan</a></li>
+                <li><a onclick="navigate('transfer')" id="nav-transfer"><i class="ph ph-arrows-left-right"></i>
+                        Transfer</a></li>
             </ul>
         </aside>
 
         <!-- Content Area -->
         <main class="content-area">
-            
+
             <!-- PAGE: DASHBOARD -->
             <div id="page-dashboard">
-                <h1 class="title is-4 mb-5">Dashboard Bulan Ini</h1>
-                
+                <h1 class="title is-4 mb-5">Dashboard</h1>
+
                 <!-- Summary Cards -->
-                <div class="columns is-mobile">
+                <div class="columns">
                     <div class="column is-6">
                         <div class="card p-4">
                             <div class="is-flex is-align-items-center" style="height: 100%;">
                                 <div class="mr-4">
-                                     <i class="ph ph-trend-up has-text-success-custom is-size-3"></i>
+                                    <i class="ph ph-trend-up has-text-success-custom is-size-3"></i>
                                 </div>
                                 <div>
                                     <p class="heading has-text-success-custom mb-0"><b>Pemasukan Bulanan</b></p>
@@ -418,9 +508,9 @@
                     </div>
                     <div class="column is-6">
                         <div class="card p-4">
-                             <div class="is-flex is-align-items-center" style="height: 100%;">
+                            <div class="is-flex is-align-items-center" style="height: 100%;">
                                 <div class="mr-4">
-                                     <i class="ph ph-trend-down has-text-danger-custom is-size-3"></i>
+                                    <i class="ph ph-trend-down has-text-danger-custom is-size-3"></i>
                                 </div>
                                 <div>
                                     <p class="heading has-text-danger-custom mb-0"><b>Pengeluaran Bulanan</b></p>
@@ -431,13 +521,15 @@
                     </div>
                 </div>
 
-                <!-- Total Saldo Card -->
-                <div class="card saldo-card p-5 mb-5">
-                    <p class="heading">Total Uang (Seluruh Penyimpanan)</p>
-                    <p class="title is-3" id="dash-total-uang">Rp 0</p>
-                    <div class="top-right-actions">
-                        <i class="ph ph-wallet" style="font-size: 2rem;"></i>
+                <div class="card saldo-card p-5 mb-5 ">
+                    <div class="center-left-actions is-flex is-align-items-center">
+                        <i class="ph ph-wallet mr-4" style="font-size: 2rem;"></i>
+                        <div>
+                            <p class="heading">Total Uang (Seluruh Penyimpanan)</p>
+                            <p class="title is-3" id="dash-total-uang">Rp 0</p>
+                        </div>
                     </div>
+                    
                 </div>
 
                 <!-- Storage Details Cards -->
@@ -447,10 +539,11 @@
                 <div class="card p-4">
                     <div class="level is-mobile mb-2">
                         <div class="level-left">
-                             <p class="title is-5">Analisa Keuangan (Bulan Ini)</p>
+                            <p class="title is-5">Analisa Keuangan (Bulan Ini)</p>
                         </div>
                         <div class="level-right">
-                             <button class="button is-small is-ghost" onclick="downloadChartPDF()"><i class="ph ph-download-simple is-size-5"></i></button>
+                            <button class="button is-small is-ghost" onclick="downloadChartPDF()"><i
+                                    class="ph ph-download-simple is-size-5"></i></button>
                         </div>
                     </div>
                     <div style="position: relative; height:300px; width:100%">
@@ -463,14 +556,11 @@
             <div id="page-catatan" class="is-hidden">
                 <h1 class="title is-4 mb-5">Catatan Transaksi</h1>
 
-                <!-- Form Updated Layout -->
+                <!-- Form -->
                 <div class="card p-5 mb-5">
-                    <div class="top-right-actions">
-                        <i class="ph ph-pencil-simple is-size-4"></i>
-                    </div>
+
                     <form id="form-transaksi" onsubmit="handleTransactionSubmit(event)">
                         <div class="columns is-multiline">
-                            <!-- Row 1: Date & Storage -->
                             <div class="column is-6">
                                 <div class="field">
                                     <label class="label">Tanggal</label>
@@ -491,48 +581,49 @@
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Row 2: Type Toggle (Full Width) -->
                             <div class="column is-12">
                                 <div class="field">
                                     <label class="label">Jenis Transaksi</label>
                                     <div class="control toggle-btn-group">
                                         <div class="buttons has-addons is-fullwidth">
-                                            <button type="button" class="button is-fullwidth is-selected-success" id="btn-in" onclick="setTrxType('Pemasukan')">Pemasukan</button>
-                                            <button type="button" class="button is-fullwidth" id="btn-out" onclick="setTrxType('Pengeluaran')">Pengeluaran</button>
+                                            <button type="button" class="button is-fullwidth is-selected-success"
+                                                id="btn-in" onclick="setTrxType('Pemasukan')">Pemasukan</button>
+                                            <button type="button" class="button is-fullwidth" id="btn-out"
+                                                onclick="setTrxType('Pengeluaran')">Pengeluaran</button>
                                         </div>
                                         <input type="hidden" name="trx-type" id="trx-type-input" value="Pemasukan">
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Row 3: Amount -->
                             <div class="column is-12">
                                 <div class="field">
                                     <label class="label">Nominal (Rp)</label>
                                     <div class="control has-icons-left">
-                                        <input class="input" type="text" id="trx-amount" inputmode="numeric" placeholder="0" required onkeyup="formatCurrencyInput(this)">
+                                        <input class="input" type="text" id="trx-amount" inputmode="numeric"
+                                            placeholder="0" required onkeyup="formatCurrencyInput(this)">
                                         <span class="icon is-small is-left">Rp</span>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Row 4: Description -->
                             <div class="column is-12">
                                 <div class="field">
                                     <label class="label">Deskripsi</label>
                                     <div class="control">
-                                        <textarea class="textarea" id="trx-desc" placeholder="Keterangan transaksi..." required rows="2"></textarea>
+                                        <textarea class="textarea" id="trx-desc" placeholder="Keterangan transaksi..."
+                                            required rows="2"></textarea>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
                         <div class="buttons is-right">
-                            <button type="submit" class="button is-primary"><i class="ph ph-plus mr-1"></i> Tambah</button>
-                            <button type="button" class="button is-light" onclick="resetForm('form-transaksi')"><i class="ph ph-arrow-counter-clockwise mr-1"></i> Reset</button>
-                            <button type="button" class="button is-warning" onclick="deleteLastTransaction()"><i class="ph ph-backspace mr-1"></i> Hapus Terakhir</button>
-                            <button type="button" class="button is-danger" onclick="deleteAllData()"><i class="ph ph-trash mr-1"></i> Hapus Semua Data</button>
+                            <button type="submit" class="button is-primary"><i class="ph ph-plus mr-1"></i>
+                                Tambah</button>
+                            <button type="button" class="button is-light" onclick="resetForm('form-transaksi')"><i
+                                    class="ph ph-arrow-counter-clockwise mr-1"></i> Reset</button>
+                            <button type="button" class="button is-warning" onclick="deleteLastTransaction()"><i
+                                    class="ph ph-backspace mr-1"></i> Hapus Terakhir</button>
+                            <button type="button" class="button is-danger" onclick="deleteAllData()"><i
+                                    class="ph ph-trash mr-1"></i> Hapus Semua Data</button>
                         </div>
                     </form>
                 </div>
@@ -541,20 +632,28 @@
                 <div class="summary-text-block" id="summary-stats-catatan"></div>
 
                 <!-- Filters & Table Actions -->
-                <div class="level is-mobile mb-3" style="flex-wrap: wrap; gap: 10px;">
+                <div class="level is-multiline mb-3" style="flex-wrap: wrap; gap: 10px;">
                     <div class="level-left">
                         <p class="subtitle is-5 font-weight-bold" id="table-period-label">Data Bulan Ini</p>
                     </div>
                     <div class="level-right">
-                        <!-- Grouped Buttons including Sort -->
                         <div class="buttons are-medium">
-                             <button class="button is-info is-light is-medium" id="sort-asc-btn" onclick="sortData('asc', 'table-keuangan')" title="Ascending"><i class="ph ph-arrow-up"></i></button>
-                             <button class="button is-info is-light is-medium" id="sort-desc-btn" onclick="sortData('desc', 'table-keuangan')" title="Descending"><i class="ph ph-arrow-down"></i></button>
-                        
-                            <button class="button is-info is-light is-medium" onclick="openModal('modal-range')" title="Rentang Riwayat"><i class="ph ph-calendar-plus"></i></button>
-                            <button class="button is-info is-light is-medium" onclick="openModal('modal-monthly')" title="Riwayat Bulanan"><i class="ph ph-calendar"></i></button>
-                            <button class="button is-info is-light is-medium" onclick="openModal('modal-yearly')" title="Riwayat Tahunan"><i class="ph ph-calendar-blank"></i></button>
-                            <button class="button is-link is-medium" onclick="downloadPDF('table-keuangan', 'Catatan Transaksi')" title="Unduh PDF Landscape"><i class="ph ph-file-pdf"></i></button>
+                            <button class="button is-info is-light is-medium" id="sort-asc-btn"
+                                onclick="sortData('asc', 'table-keuangan')" title="Ascending"><i
+                                    class="ph ph-arrow-up"></i></button>
+                            <button class="button is-info is-light is-medium" id="sort-desc-btn"
+                                onclick="sortData('desc', 'table-keuangan')" title="Descending"><i
+                                    class="ph ph-arrow-down"></i></button>
+
+                            <button class="button is-info is-light is-medium" onclick="openModal('modal-range')"
+                                title="Rentang Riwayat"><i class="ph ph-calendar-plus"></i></button>
+                            <button class="button is-info is-light is-medium" onclick="openModal('modal-monthly')"
+                                title="Riwayat Bulanan"><i class="ph ph-calendar"></i></button>
+                            <button class="button is-info is-light is-medium" onclick="openModal('modal-yearly')"
+                                title="Riwayat Tahunan"><i class="ph ph-calendar-blank"></i></button>
+                            <button class="button is-link is-medium"
+                                onclick="downloadPDF('table-keuangan', 'Catatan Transaksi')"
+                                title="Unduh PDF Landscape"><i class="ph ph-file-pdf"></i></button>
                         </div>
                     </div>
                 </div>
@@ -567,13 +666,11 @@
                                 <th>Tanggal</th>
                                 <th>Penyimpanan</th>
                                 <th>Transaksi</th>
-                                <th style="min-width: 200px;">Deskripsi</th>
+                                <th class="col-desc">Deskripsi</th>
                                 <th class="has-text-right">Saldo</th>
                             </tr>
                         </thead>
-                        <tbody id="tbody-keuangan">
-                            <!-- Data injected here -->
-                        </tbody>
+                        <tbody id="tbody-keuangan"></tbody>
                     </table>
                 </div>
             </div>
@@ -581,12 +678,11 @@
             <!-- PAGE: PENYIMPANAN -->
             <div id="page-penyimpanan" class="is-hidden">
                 <h1 class="title is-4 mb-5">Manajemen Penyimpanan</h1>
-                
+
                 <div class="tabs-vertical-container">
                     <!-- Left: Navigation / List -->
                     <div class="vertical-tabs" id="storage-tabs">
                         <a class="is-active" onclick="switchStorageTab('all')">Daftar Penyimpanan (Utama)</a>
-                        <!-- Dynamic Storage Tabs -->
                     </div>
 
                     <!-- Right: Content -->
@@ -596,7 +692,7 @@
                             <button class="button is-primary mb-4" onclick="openModal('modal-add-storage')">
                                 <i class="ph ph-plus-circle mr-2"></i> Tambah Simpanan
                             </button>
-                            
+
                             <div class="table-container table-responsive-wrapper">
                                 <table class="table is-fullwidth" id="table-penyimpanan-list">
                                     <thead>
@@ -613,36 +709,50 @@
 
                         <!-- Content for specific storage -->
                         <div id="storage-view-detail" class="is-hidden">
-                            <div class="card p-4 mb-4" style="background: linear-gradient(135deg, var(--color-primary), var(--color-info)); color: white;">
+                            <div class="card p-4 mb-4"
+                                style="background: linear-gradient(135deg, var(--color-primary), var(--color-info)); color: white;">
                                 <p class="is-size-7" style="color: #e0f2ff;">Total Saldo Saat Ini</p>
                                 <p class="title is-3" style="color: white;" id="detail-storage-balance">Rp 0</p>
                             </div>
 
                             <div class="summary-text-block" id="summary-stats-storage"></div>
 
-                            <div class="level is-mobile mb-3" style="flex-wrap: wrap;">
+                            <!-- IMPROVED BUTTON LAYOUT FOR STORAGE DETAIL -->
+                            <div class="level is-multiline mb-3" style="flex-wrap: wrap; gap: 10px;">
                                 <div class="level-left">
                                     <h2 class="subtitle is-5" id="detail-storage-name">Nama Simpanan</h2>
                                 </div>
                                 <div class="level-right">
                                     <div class="buttons are-medium">
-                                         <button class="button is-info is-light is-medium" id="sort-asc-storage" onclick="sortData('asc', 'table-storage-detail')"><i class="ph ph-arrow-up"></i></button>
-                                         <button class="button is-info is-light is-medium" id="sort-desc-storage" onclick="sortData('desc', 'table-storage-detail')"><i class="ph ph-arrow-down"></i></button>
-                                    
-                                        <button class="button is-info is-light is-medium" onclick="openModal('modal-range')" title="Rentang"><i class="ph ph-calendar-plus"></i></button>
-                                        <button class="button is-info is-light is-medium" onclick="openModal('modal-monthly')" title="Bulanan"><i class="ph ph-calendar"></i></button>
-                                        <button class="button is-info is-light is-medium" onclick="openModal('modal-yearly')" title="Tahunan"><i class="ph ph-calendar-blank"></i></button>
-                                        <button class="button is-link is-medium" onclick="downloadStoragePDF()" title="PDF Landscape"><i class="ph ph-file-pdf"></i></button>
+                                        <button class="button is-info is-light is-medium" id="sort-asc-storage"
+                                            onclick="sortData('asc', 'table-storage-detail')"><i
+                                                class="ph ph-arrow-up"></i></button>
+                                        <button class="button is-info is-light is-medium" id="sort-desc-storage"
+                                            onclick="sortData('desc', 'table-storage-detail')"><i
+                                                class="ph ph-arrow-down"></i></button>
+
+                                        <button class="button is-info is-light is-medium"
+                                            onclick="openModal('modal-range')" title="Rentang"><i
+                                                class="ph ph-calendar-plus"></i></button>
+                                        <button class="button is-info is-light is-medium"
+                                            onclick="openModal('modal-monthly')" title="Bulanan"><i
+                                                class="ph ph-calendar"></i></button>
+                                        <button class="button is-info is-light is-medium"
+                                            onclick="openModal('modal-yearly')" title="Tahunan"><i
+                                                class="ph ph-calendar-blank"></i></button>
+                                        <button class="button is-link is-medium" onclick="downloadStoragePDF()"
+                                            title="PDF Landscape"><i class="ph ph-file-pdf"></i></button>
                                     </div>
                                 </div>
                             </div>
+
                             <div class="table-container table-responsive-wrapper">
                                 <table class="table is-fullwidth" id="table-storage-detail">
                                     <thead>
                                         <tr>
                                             <th>Tanggal</th>
                                             <th>Transaksi</th>
-                                            <th style="min-width: 200px;">Deskripsi</th>
+                                            <th class="col-desc">Deskripsi</th>
                                             <th class="has-text-right">Saldo</th>
                                         </tr>
                                     </thead>
@@ -657,14 +767,12 @@
             <!-- PAGE: TRANSFER -->
             <div id="page-transfer" class="is-hidden">
                 <h1 class="title is-4 mb-5">Transfer Antar Penyimpanan</h1>
-                
+
                 <div class="card p-5">
-                    <div class="top-right-actions">
-                         <i class="ph ph-arrows-left-right is-size-4"></i>
-                    </div>
+
                     <form id="form-transfer" onsubmit="handleTransferSubmit(event)">
                         <div class="columns is-multiline">
-                             <div class="column is-12">
+                            <div class="column is-12">
                                 <div class="field">
                                     <label class="label">Tanggal Transfer</label>
                                     <div class="control">
@@ -700,16 +808,18 @@
                                 <div class="field">
                                     <label class="label">Nominal Transfer (Rp)</label>
                                     <div class="control has-icons-left">
-                                        <input class="input" type="text" id="trf-amount" inputmode="numeric" placeholder="0" required onkeyup="formatCurrencyInput(this)">
+                                        <input class="input" type="text" id="trf-amount" inputmode="numeric"
+                                            placeholder="0" required onkeyup="formatCurrencyInput(this)">
                                         <span class="icon is-small is-left">Rp</span>
                                     </div>
                                 </div>
                             </div>
-                             <div class="column is-6">
+                            <div class="column is-6">
                                 <div class="field">
                                     <label class="label">Catatan Pengirim</label>
                                     <div class="control">
-                                        <textarea class="textarea" id="trf-desc-source" rows="2" placeholder="Ex: Transfer ke..." required></textarea>
+                                        <textarea class="textarea" id="trf-desc-source" rows="2"
+                                            placeholder="Ex: Transfer ke..." required></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -717,13 +827,15 @@
                                 <div class="field">
                                     <label class="label">Catatan Penerima</label>
                                     <div class="control">
-                                        <textarea class="textarea" id="trf-desc-dest" rows="2" placeholder="Ex: Transfer dari..." required></textarea>
+                                        <textarea class="textarea" id="trf-desc-dest" rows="2"
+                                            placeholder="Ex: Transfer dari..." required></textarea>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="buttons is-right">
-                             <button type="submit" class="button is-primary"><i class="ph ph-paper-plane-right mr-2"></i> Kirim Uang</button>
+                            <button type="submit" class="button is-primary"><i class="ph ph-paper-plane-right mr-2"></i>
+                                Kirim Uang</button>
                         </div>
                     </form>
                 </div>
@@ -831,7 +943,7 @@
             <section class="modal-card-body">
                 <div class="field">
                     <label class="label">Nama Penyimpanan</label>
-                    <input class="input" type="text" id="new-storage-name" placeholder="Ex: Dompet, Bank BCA">
+                    <input class="input" type="text" id="new-storage-name" placeholder="Masukan Nama Penyimpanan">
                 </div>
             </section>
             <footer class="modal-card-foot">
@@ -870,11 +982,11 @@
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // --- 2. GLOBAL STATE ---
-        let currentStorageTabId = null; 
+        let currentStorageTabId = null;
         let currentStorageName = "";
         let currentStorageBalance = 0;
         let chartInstance = null;
-        let activeFilter = { type: 'currentMonth' }; 
+        let activeFilter = { type: 'currentMonth' };
         // Track stats globally for PDF use
         let summaryStats = {
             mIn: 0, mOut: 0, yIn: 0, yOut: 0
@@ -904,11 +1016,13 @@
                 icon.classList.replace('ph-sun', 'ph-moon');
                 localStorage.setItem('theme', 'light');
             }
-            if(chartInstance) updateChartColors();
+            if (chartInstance) updateChartColors();
         }
 
+        // Toggle Sidebar Function
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('is-active');
+            document.querySelector('.burger-menu').classList.toggle('is-active');
         }
 
         // Toggle Buttons Logic (Radio Replacement)
@@ -916,7 +1030,7 @@
             document.getElementById('trx-type-input').value = type;
             const btnIn = document.getElementById('btn-in');
             const btnOut = document.getElementById('btn-out');
-            
+
             // Reset
             btnIn.classList.remove('is-selected-success');
             btnOut.classList.remove('is-selected-danger');
@@ -936,7 +1050,12 @@
             document.querySelectorAll('.menu-list a').forEach(el => el.classList.remove('is-active'));
             document.getElementById(`page-${page}`).classList.remove('is-hidden');
             document.getElementById(`nav-${page}`).classList.add('is-active');
-            if (window.innerWidth < 1024) document.getElementById('sidebar').classList.remove('is-active');
+
+            // Auto close sidebar on mobile when link is clicked
+            if (window.innerWidth < 1024) {
+                document.getElementById('sidebar').classList.remove('is-active');
+                document.querySelector('.burger-menu').classList.remove('is-active');
+            }
 
             if (page === 'dashboard') loadDashboard();
             if (page === 'catatan') loadCatatan();
@@ -975,12 +1094,12 @@
         async function calculateSummaryStats(filterStorageId = null) {
             const now = new Date();
             const year = now.getFullYear();
-            const month = now.getMonth(); 
+            const month = now.getMonth();
 
             // Current Month Range
             const startMonth = new Date(year, month, 1).toISOString();
             const endMonth = new Date(year, month + 1, 0).toISOString();
-            
+
             // Current Year Range
             const startYear = new Date(year, 0, 1).toISOString();
             const endYear = new Date(year, 11, 31).toISOString();
@@ -988,7 +1107,7 @@
             let qMonth = supabase.from('keuangan').select('saldo, transaksi').gte('tanggal', startMonth).lte('tanggal', endMonth);
             let qYear = supabase.from('keuangan').select('saldo, transaksi').gte('tanggal', startYear).lte('tanggal', endYear);
 
-            if(filterStorageId) {
+            if (filterStorageId) {
                 qMonth = qMonth.eq('id_sim', filterStorageId);
                 qYear = qYear.eq('id_sim', filterStorageId);
             }
@@ -998,15 +1117,15 @@
 
             let mIn = 0, mOut = 0, yIn = 0, yOut = 0;
 
-            if(resMonth.data) {
+            if (resMonth.data) {
                 resMonth.data.forEach(t => {
-                    if(t.transaksi === 'Pemasukan') mIn += t.saldo;
+                    if (t.transaksi === 'Pemasukan') mIn += t.saldo;
                     else mOut += t.saldo;
                 });
             }
-            if(resYear.data) {
+            if (resYear.data) {
                 resYear.data.forEach(t => {
-                    if(t.transaksi === 'Pemasukan') yIn += t.saldo;
+                    if (t.transaksi === 'Pemasukan') yIn += t.saldo;
                     else yOut += t.saldo;
                 });
             }
@@ -1020,14 +1139,14 @@
             el.innerHTML = `
                 <div class="columns is-mobile is-multiline">
                     <div class="column is-6">
-                        <p class="has-text-grey-light is-size-7">Bulan Ini</p>
-                        <p class="has-text-success-custom is-size-7 font-weight-bold">Masuk: ${formatRupiah(stats.mIn)}</p>
-                        <p class="has-text-danger-custom is-size-7 font-weight-bold">Keluar: ${formatRupiah(stats.mOut)}</p>
+                        <p class="has-text-grey-light is-size-12">Bulan Ini</p>
+                        <p class="has-text-success-custom is-size-12 font-weight-bold">Masuk: ${formatRupiah(stats.mIn)}</p>
+                        <p class="has-text-danger-custom is-size-12 font-weight-bold">Keluar: ${formatRupiah(stats.mOut)}</p>
                     </div>
                     <div class="column is-6">
-                        <p class="has-text-grey-light is-size-7">Tahun Ini</p>
-                        <p class="has-text-success-custom is-size-7 font-weight-bold">Masuk: ${formatRupiah(stats.yIn)}</p>
-                        <p class="has-text-danger-custom is-size-7 font-weight-bold">Keluar: ${formatRupiah(stats.yOut)}</p>
+                        <p class="has-text-grey-light is-size-12">Tahun Ini</p>
+                        <p class="has-text-success-custom is-size-12 font-weight-bold">Masuk: ${formatRupiah(stats.yIn)}</p>
+                        <p class="has-text-danger-custom is-size-12 font-weight-bold">Keluar: ${formatRupiah(stats.yOut)}</p>
                     </div>
                 </div>
             `;
@@ -1050,7 +1169,7 @@
             let income = 0;
             let expense = 0;
             const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-            const chartLabels = Array.from({length: daysInMonth}, (_, i) => i + 1);
+            const chartLabels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
             const chartDataIncome = new Array(daysInMonth).fill(0);
             const chartDataExpense = new Array(daysInMonth).fill(0);
 
@@ -1058,10 +1177,10 @@
                 const day = new Date(trx.tanggal).getDate();
                 if (trx.transaksi === 'Pemasukan') {
                     income += trx.saldo;
-                    chartDataIncome[day-1] += trx.saldo;
+                    chartDataIncome[day - 1] += trx.saldo;
                 } else {
                     expense += trx.saldo;
-                    chartDataExpense[day-1] += trx.saldo;
+                    chartDataExpense[day - 1] += trx.saldo;
                 }
             });
 
@@ -1070,7 +1189,7 @@
 
             const { data: storeData } = await supabase.from('penyimpanan').select('*');
             const { data: allTrx } = await supabase.from('keuangan').select('id_sim, saldo, transaksi');
-            
+
             let grandTotal = 0;
             const storageBalances = {};
             storeData.forEach(s => storageBalances[s.id_sim] = { name: s.namasim, balance: 0 });
@@ -1084,7 +1203,7 @@
 
             const container = document.getElementById('dash-storage-cards');
             container.innerHTML = '';
-            
+
             for (const [id, store] of Object.entries(storageBalances)) {
                 grandTotal += store.balance;
                 const col = document.createElement('div');
@@ -1142,7 +1261,7 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            suggestedMax: 100000, 
+                            suggestedMax: 100000,
                             grid: { color: gridColor },
                             ticks: { color: textColor }
                         },
@@ -1157,7 +1276,7 @@
                 }
             });
         }
-        
+
         function updateChartColors() {
             if (document.getElementById('page-dashboard').classList.contains('is-hidden')) return;
             loadDashboard();
@@ -1202,8 +1321,8 @@
             }
 
             const { data, error } = await query.order('tanggal', { ascending: false });
-            
-            if (error) { Toast.fire({icon:'error', title: 'Gagal memuat data'}); return; }
+
+            if (error) { Toast.fire({ icon: 'error', title: 'Gagal memuat data' }); return; }
 
             const tbody = document.getElementById('tbody-keuangan');
             tbody.innerHTML = '';
@@ -1230,7 +1349,7 @@
             const amount = unformatRupiah(document.getElementById('trx-amount').value);
             const desc = document.getElementById('trx-desc').value;
 
-            if (!amount || amount <= 0) return Toast.fire({icon: 'warning', title: 'Nominal tidak valid'});
+            if (!amount || amount <= 0) return Toast.fire({ icon: 'warning', title: 'Nominal tidak valid' });
 
             const { error } = await supabase.from('keuangan').insert([{
                 id_sim: storageId,
@@ -1241,9 +1360,9 @@
             }]);
 
             if (error) {
-                Toast.fire({icon:'error', title: error.message});
+                Toast.fire({ icon: 'error', title: error.message });
             } else {
-                Toast.fire({icon:'success', title: 'Data Berhasil Ditambah'});
+                Toast.fire({ icon: 'success', title: 'Data Berhasil Ditambah' });
                 resetForm('form-transaksi');
                 fetchTransactions();
             }
@@ -1252,24 +1371,24 @@
         function resetForm(formId) {
             document.getElementById(formId).reset();
             const today = new Date().toISOString().split('T')[0];
-            if(formId === 'form-transaksi') {
+            if (formId === 'form-transaksi') {
                 document.getElementById('trx-date').value = today;
                 setTrxType('Pemasukan'); // Reset to Pemasukan
             }
-            if(formId === 'form-transfer') document.getElementById('trf-date').value = today;
+            if (formId === 'form-transfer') document.getElementById('trf-date').value = today;
         }
 
         async function deleteLastTransaction() {
-            const { data, error } = await supabase.from('keuangan').select('id_keung').order('id_keung', {ascending: false}).limit(1);
+            const { data, error } = await supabase.from('keuangan').select('id_keung').order('id_keung', { ascending: false }).limit(1);
             if (data && data.length > 0) {
                 const idToDelete = data[0].id_keung;
                 const { error: delError } = await supabase.from('keuangan').delete().eq('id_keung', idToDelete);
                 if (!delError) {
-                    Toast.fire({icon:'success', title: 'Baris Terakhir Dihapus'});
+                    Toast.fire({ icon: 'success', title: 'Baris Terakhir Dihapus' });
                     fetchTransactions();
                 }
             } else {
-                Toast.fire({icon:'info', title: 'Data kosong'});
+                Toast.fire({ icon: 'info', title: 'Data kosong' });
             }
         }
 
@@ -1291,13 +1410,13 @@
                         confirmButtonText: 'HANCURKAN DATA'
                     }).then(async (res2) => {
                         if (res2.isConfirmed) {
-                             const { error } = await supabase.from('keuangan').delete().neq('id_keung', 0);
-                             if(!error) {
-                                 Toast.fire({icon:'success', title: 'Semua Data Terhapus'});
-                                 fetchTransactions();
-                             } else {
-                                 Toast.fire({icon:'error', title: 'Gagal Menghapus'});
-                             }
+                            const { error } = await supabase.from('keuangan').delete().neq('id_keung', 0);
+                            if (!error) {
+                                Toast.fire({ icon: 'success', title: 'Semua Data Terhapus' });
+                                fetchTransactions();
+                            } else {
+                                Toast.fire({ icon: 'error', title: 'Gagal Menghapus' });
+                            }
                         }
                     });
                 }
@@ -1312,51 +1431,51 @@
             if (type === 'range') {
                 const start = document.getElementById('filter-start').value;
                 const end = document.getElementById('filter-end').value;
-                if(!start || !end) return Toast.fire({icon:'warning', title:'Isi kedua tanggal'});
+                if (!start || !end) return Toast.fire({ icon: 'warning', title: 'Isi kedua tanggal' });
                 activeFilter = { type: 'range', start, end };
                 document.getElementById('table-period-label').innerText = `Rentang: ${start} s/d ${end}`;
                 closeModal('modal-range');
             } else if (type === 'monthly') {
                 const m = document.getElementById('filter-month-select').value;
                 const y = document.getElementById('filter-month-year').value;
-                if(!y) return Toast.fire({icon:'warning', title:'Isi tahun'});
+                if (!y) return Toast.fire({ icon: 'warning', title: 'Isi tahun' });
                 activeFilter = { type: 'monthly', month: m, year: y };
                 document.getElementById('table-period-label').innerText = `Periode: Bulan ${m}, ${y}`;
                 closeModal('modal-monthly');
             } else if (type === 'yearly') {
                 const y = document.getElementById('filter-year-input').value;
-                if(!y) return Toast.fire({icon:'warning', title:'Isi tahun'});
+                if (!y) return Toast.fire({ icon: 'warning', title: 'Isi tahun' });
                 activeFilter = { type: 'yearly', year: y };
                 document.getElementById('table-period-label').innerText = `Periode: Tahun ${y}`;
                 closeModal('modal-yearly');
             }
-            
+
             if (!document.getElementById('page-catatan').classList.contains('is-hidden')) fetchTransactions();
             if (currentStorageTabId) fetchDetailStorage(currentStorageTabId);
         }
 
         // --- 9. PAGE LOGIC: PENYIMPANAN ---
         async function loadPenyimpanan() {
-            const { data } = await supabase.from('penyimpanan').select('*').order('id_sim', {ascending: true});
+            const { data } = await supabase.from('penyimpanan').select('*').order('id_sim', { ascending: true });
             const tabs = document.getElementById('storage-tabs');
-            
-            tabs.innerHTML = `<a class="${currentStorageTabId === null ? 'is-active' : ''}" onclick="switchStorageTab('all')">Daftar Penyimpanan</a>`;
-            
+
+            tabs.innerHTML = `<a class="${currentStorageTabId === null ? 'is-active' : ''}" onclick="switchStorageTab('all')">Daftar Penyimpanan (Utama)</a>`;
+
             data.forEach(s => {
                 tabs.innerHTML += `<a class="${currentStorageTabId == s.id_sim ? 'is-active' : ''}" onclick="switchStorageTab('${s.id_sim}', '${s.namasim}')">${s.namasim}</a>`;
             });
 
-            if(currentStorageTabId === null) fetchStorageList();
+            if (currentStorageTabId === null) fetchStorageList();
             else fetchDetailStorage(currentStorageTabId);
         }
 
         async function fetchStorageList() {
             const { data: stores } = await supabase.from('penyimpanan').select('*');
             const { data: trxs } = await supabase.from('keuangan').select('id_sim, saldo, transaksi');
-            
+
             const balances = {};
             stores.forEach(s => balances[s.id_sim] = 0);
-            
+
             trxs.forEach(t => {
                 if (balances[t.id_sim] !== undefined) {
                     if (t.transaksi === 'Pemasukan') balances[t.id_sim] += t.saldo;
@@ -1366,7 +1485,7 @@
 
             const tbody = document.getElementById('tbody-penyimpanan-list');
             tbody.innerHTML = '';
-            
+
             stores.forEach((s) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -1384,24 +1503,24 @@
         function switchStorageTab(id, name) {
             currentStorageTabId = id === 'all' ? null : id;
             currentStorageName = name || "";
-            
+
             document.querySelectorAll('#storage-tabs a').forEach(a => a.classList.remove('is-active'));
-            
+
             if (id === 'all') {
                 document.getElementById('storage-view-all').classList.remove('is-hidden');
                 document.getElementById('storage-view-detail').classList.add('is-hidden');
-                loadPenyimpanan(); 
+                loadPenyimpanan();
             } else {
                 document.getElementById('storage-view-all').classList.add('is-hidden');
                 document.getElementById('storage-view-detail').classList.remove('is-hidden');
                 document.getElementById('detail-storage-name').innerText = `Riwayat: ${name}`;
-                
+
                 const links = document.querySelectorAll('#storage-tabs a');
                 links.forEach(l => {
-                    if(l.innerText === name) l.classList.add('is-active');
+                    if (l.innerText === name) l.classList.add('is-active');
                 });
-                
-                activeFilter = { type: 'currentMonth' }; 
+
+                activeFilter = { type: 'currentMonth' };
                 fetchDetailStorage(id);
             }
         }
@@ -1414,10 +1533,10 @@
             // Total Balance for this storage (All Time)
             const { data: allTimeTrx } = await supabase.from('keuangan').select('saldo, transaksi').eq('id_sim', idSim);
             let bal = 0;
-            if(allTimeTrx) {
+            if (allTimeTrx) {
                 allTimeTrx.forEach(t => {
-                     if(t.transaksi === 'Pemasukan') bal += t.saldo;
-                     else bal -= t.saldo;
+                    if (t.transaksi === 'Pemasukan') bal += t.saldo;
+                    else bal -= t.saldo;
                 });
             }
             currentStorageBalance = bal;
@@ -1442,12 +1561,12 @@
                 query = query.gte('tanggal', first).lte('tanggal', last);
             }
 
-            const { data, error } = await query.order('tanggal', {ascending: false});
-            
+            const { data, error } = await query.order('tanggal', { ascending: false });
+
             const tbody = document.getElementById('tbody-storage-detail');
             tbody.innerHTML = '';
 
-            if(data) {
+            if (data) {
                 data.forEach(row => {
                     const colorClass = row.transaksi === 'Pemasukan' ? 'has-text-success-custom' : 'has-text-danger-custom';
                     tbody.innerHTML += `
@@ -1464,10 +1583,10 @@
 
         async function saveNewStorage() {
             const name = document.getElementById('new-storage-name').value;
-            if(!name) return;
+            if (!name) return;
             const { error } = await supabase.from('penyimpanan').insert([{ namasim: name }]);
-            if(!error) {
-                Toast.fire({icon:'success', title: 'Penyimpanan Ditambah'});
+            if (!error) {
+                Toast.fire({ icon: 'success', title: 'Penyimpanan Ditambah' });
                 closeModal('modal-add-storage');
                 loadPenyimpanan();
             }
@@ -1483,8 +1602,8 @@
             const id = document.getElementById('edit-storage-id').value;
             const name = document.getElementById('edit-storage-name').value;
             const { error } = await supabase.from('penyimpanan').update({ namasim: name }).eq('id_sim', id);
-            if(!error) {
-                Toast.fire({icon:'success', title: 'Berhasil diupdate'});
+            if (!error) {
+                Toast.fire({ icon: 'success', title: 'Berhasil diupdate' });
                 closeModal('modal-edit-storage');
                 loadPenyimpanan();
             }
@@ -1499,14 +1618,14 @@
                 confirmButtonColor: '#d33',
                 confirmButtonText: 'Ya, Hapus'
             }).then(async (result) => {
-                if(result.isConfirmed) {
+                if (result.isConfirmed) {
                     await supabase.from('keuangan').delete().eq('id_sim', id);
                     const { error } = await supabase.from('penyimpanan').delete().eq('id_sim', id);
-                    if(!error) {
-                        Toast.fire({icon:'success', title: 'Terhapus'});
+                    if (!error) {
+                        Toast.fire({ icon: 'success', title: 'Terhapus' });
                         loadPenyimpanan();
                     } else {
-                        Toast.fire({icon:'error', title: 'Gagal Hapus'});
+                        Toast.fire({ icon: 'error', title: 'Gagal Hapus' });
                     }
                 }
             })
@@ -1517,10 +1636,10 @@
             const { data: stores } = await supabase.from('penyimpanan').select('*');
             const src = document.getElementById('trf-source');
             const dst = document.getElementById('trf-dest');
-            
+
             src.innerHTML = '<option value="" disabled selected>Pilih Sumber</option>';
             dst.innerHTML = '<option value="" disabled selected>Pilih Tujuan</option>';
-            
+
             stores.forEach(s => {
                 const opt = `<option value="${s.id_sim}">${s.namasim}</option>`;
                 src.innerHTML += opt;
@@ -1537,15 +1656,15 @@
             const descSrc = document.getElementById('trf-desc-source').value;
             const descDst = document.getElementById('trf-desc-dest').value;
 
-            if(srcId === dstId) return Toast.fire({icon:'error', title: 'Sumber dan Tujuan sama'});
-            if(amount <= 0) return Toast.fire({icon:'warning', title: 'Nominal salah'});
+            if (srcId === dstId) return Toast.fire({ icon: 'error', title: 'Sumber dan Tujuan sama' });
+            if (amount <= 0) return Toast.fire({ icon: 'warning', title: 'Nominal salah' });
 
             // VALIDATION: Check Source Balance
             const { data: trxSource } = await supabase.from('keuangan').select('saldo, transaksi').eq('id_sim', srcId);
             let currentSrcBalance = 0;
-            if(trxSource) {
+            if (trxSource) {
                 trxSource.forEach(t => {
-                    if(t.transaksi === 'Pemasukan') currentSrcBalance += t.saldo;
+                    if (t.transaksi === 'Pemasukan') currentSrcBalance += t.saldo;
                     else currentSrcBalance -= t.saldo;
                 });
             }
@@ -1563,14 +1682,14 @@
                 id_sim: srcId, tanggal: date, transaksi: 'Pengeluaran', saldo: amount, deskripsi: descSrc
             }]);
 
-            if(op1.error) return Toast.fire({icon:'error', title: 'Gagal tahap 1: ' + op1.error.message});
+            if (op1.error) return Toast.fire({ icon: 'error', title: 'Gagal tahap 1: ' + op1.error.message });
 
             const op2 = await supabase.from('keuangan').insert([{
                 id_sim: dstId, tanggal: date, transaksi: 'Pemasukan', saldo: amount, deskripsi: descDst
             }]);
 
-            if(op2.error) {
-                Toast.fire({icon:'error', title: 'Gagal tahap 2'});
+            if (op2.error) {
+                Toast.fire({ icon: 'error', title: 'Gagal tahap 2' });
             } else {
                 Swal.fire({
                     icon: 'success',
@@ -1586,17 +1705,17 @@
             const table = document.getElementById(tableId);
             const tbody = table.querySelector('tbody');
             const rows = Array.from(tbody.querySelectorAll('tr'));
-            
+
             // Visual feedback buttons
             const isStorage = tableId === 'table-storage-detail';
             const btnAsc = document.getElementById(isStorage ? 'sort-asc-storage' : 'sort-asc-btn');
             const btnDesc = document.getElementById(isStorage ? 'sort-desc-storage' : 'sort-desc-btn');
-            
-            btnAsc.classList.remove('is-sort-active');
-            btnDesc.classList.remove('is-sort-active');
-            
-            if(dir === 'asc') btnAsc.classList.add('is-sort-active');
-            else btnDesc.classList.add('is-sort-active');
+
+            if (btnAsc) btnAsc.classList.remove('is-sort-active');
+            if (btnDesc) btnDesc.classList.remove('is-sort-active');
+
+            if (dir === 'asc' && btnAsc) btnAsc.classList.add('is-sort-active');
+            else if (btnDesc) btnDesc.classList.add('is-sort-active');
 
             rows.sort((a, b) => {
                 const dateA = new Date(a.cells[0].getAttribute('data-date'));
@@ -1611,7 +1730,7 @@
         function downloadPDF(tableId, title = "Laporan Keuangan") {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: 'landscape' }); // Landscape
-            
+
             doc.text(title, 14, 15);
             doc.setFontSize(10);
             doc.text(`Dicetak pada: ${new Date().toLocaleString()}`, 14, 22);
@@ -1621,13 +1740,13 @@
             doc.text(`Bulan Ini - Masuk: ${formatRupiah(summaryStats.mIn)}, Keluar: ${formatRupiah(summaryStats.mOut)}`, 14, 35);
             doc.text(`Tahun Ini - Masuk: ${formatRupiah(summaryStats.yIn)}, Keluar: ${formatRupiah(summaryStats.yOut)}`, 14, 40);
 
-            doc.autoTable({ 
+            doc.autoTable({
                 html: '#' + tableId,
                 startY: 45,
                 theme: 'grid',
                 styles: { fontSize: 8, cellWidth: 'wrap' }, // Ensure text wrap
                 headStyles: { fillColor: [17, 103, 177] },
-                columnStyles: { 
+                columnStyles: {
                     3: { cellWidth: 80 } // Force description column width
                 }
             });
@@ -1638,30 +1757,30 @@
         function downloadStoragePDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: 'landscape' }); // Landscape
-            
+
             doc.setFontSize(14);
             doc.text(`Laporan Penyimpanan: ${currentStorageName}`, 14, 15);
             doc.setFontSize(10);
             doc.text(`Dicetak pada: ${new Date().toLocaleString()}`, 14, 22);
-            
+
             // Add Balance Card Info
             doc.setFontSize(12);
             doc.setTextColor(17, 103, 177);
             doc.text(`Total Saldo Saat Ini: ${formatRupiah(currentStorageBalance)}`, 14, 32);
-            doc.setTextColor(0,0,0);
+            doc.setTextColor(0, 0, 0);
             doc.setFontSize(10);
 
             // Add Summary
             doc.text(`Bulan Ini - Masuk: ${formatRupiah(summaryStats.mIn)}, Keluar: ${formatRupiah(summaryStats.mOut)}`, 14, 40);
             doc.text(`Tahun Ini - Masuk: ${formatRupiah(summaryStats.yIn)}, Keluar: ${formatRupiah(summaryStats.yOut)}`, 14, 45);
 
-            doc.autoTable({ 
+            doc.autoTable({
                 html: '#table-storage-detail',
                 startY: 50,
                 theme: 'grid',
                 styles: { fontSize: 8, cellWidth: 'wrap' },
                 headStyles: { fillColor: [17, 103, 177] },
-                columnStyles: { 
+                columnStyles: {
                     2: { cellWidth: 80 } // Force description column width
                 }
             });
@@ -1683,4 +1802,5 @@
 
     </script>
 </body>
+
 </html>
