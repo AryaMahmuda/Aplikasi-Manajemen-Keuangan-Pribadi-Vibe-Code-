@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Keuangan Pribadi</title>
+    
+    <!-- Bulma CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- jsPDF & AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        :root {
+            --color-primary: #1167b1;
+            --color-secondary: #187bcd;
+            --color-info: #2a9df4;
+            --color-dark-bg: #03254c;
+            --color-darker: #0e2433;
+            --color-light: #d0efff;
+            --text-main: #363636;
+            --bg-main: #fcfcfc;
+            --card-bg: #ffffff;
+            
+            /* Light Mode Table Colors */
+            --row-even: #f0f8ff; /* AliceBlue-ish for distinct diff */
+            --row-odd: #ffffff;
+            --modal-content-bg: #ffffff;
+            --modal-head-foot-bg: #f5f5f5;
+            
+            --input-bg: #ffffff;
+            --input-border: #dbdbdb;
+            --input-text: #363636;
+        }
+
+        /* Dark Mode Variables - High Contrast Fix */
+        body.dark-mode {
+            --text-main: #e0e0e0;
+            --bg-main: #0b1a26;
+            --card-bg: #03254c; /* Dark Blue Base */
+            
+            /* Dark Mode Table Colors - Distinct Alternating */
+            --row-even: #0a3d6b; /* Lighter than card bg */
+            --row-odd: #052c52;  /* Slightly darker/different shade */
+            
+            --modal-content-bg: #03254c;
+            --modal-head-foot-bg: #021a36; /* Darker for contrast */
+            
+            --input-bg: #06386e;
+            --input-border: #2a9df4;
+            --input-text: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Layout */
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 260px;
+            background-color: var(--color-dark-bg);
+            color: white;
+            padding: 2rem 1rem;
+            position: fixed;
+            height: 100vh;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar .menu-label {
+            color: #8bbce7;
+        }
+
+        .sidebar .menu-list a {
+            color: #d0efff;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar .menu-list a:hover, .sidebar .menu-list a.is-active {
+            background-color: var(--color-primary);
+            color: white;
+        }
+
+        .content-area {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+            position: relative;
+            /* Prevent overflow content from breaking layout */
+            overflow-x: hidden;
+        }
+
+        /* Mobile Responsive */
+        .burger-menu {
+            display: none;
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1002;
+            color: var(--color-primary);
+            cursor: pointer;
+            font-size: 2rem;
+        }
+
+        @media (max-width: 1023px) {
+            .sidebar {
+                transform: translateY(-100%);
+                width: 100%;
+                height: auto;
+                position: absolute;
+                top: 0;
+                left: 0;
+                padding-top: 4rem;
+                text-align: right; 
+            }
+            .sidebar.is-active {
+                transform: translateY(0);
+            }
+            .sidebar .menu-list a {
+                justify-content: flex-end;
+            }
+            .content-area {
+                margin-left: 0;
+                padding-top: 4rem;
+            }
+            .burger-menu {
+                display: block;
+            }
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 1.5rem;
+            right: 2rem;
+            z-index: 1001;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--color-primary);
+            background: var(--card-bg);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Components */
+        .card {
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+            position: relative;
+            transition: transform 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card .title, .card .subtitle, .label {
+            color: var(--text-main);
+        }
+
+        /* Input Styles with Theme Support */
+        .input, .select select, .textarea {
+            background-color: var(--input-bg);
+            border-color: var(--input-border);
+            color: var(--input-text);
+        }
+        .input::placeholder, .textarea::placeholder {
+            color: #888;
+        }
+        /* Fix select arrow color in dark mode if needed (Bulma default is usually ok, but ensuring) */
+        body.dark-mode .select:not(.is-multiple):not(.is-loading)::after {
+            border-color: var(--color-primary);
+        }
+
+        /* Tables */
+        .table-responsive-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        table.table {
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table.table th {
+            color: var(--text-main);
+            background-color: var(--color-primary); 
+            color: white !important;
+            border: none;
+            white-space: nowrap; /* Keep headers single line */
+        }
+        
+        table.table td {
+            border: none;
+            vertical-align: middle;
+            color: var(--text-main);
+            padding: 0.75rem;
+        }
+
+        /* Nth Child Coloring - No Hover */
+        table.table tbody tr:nth-child(odd) {
+            background-color: var(--row-odd);
+        }
+        table.table tbody tr:nth-child(even) {
+            background-color: var(--row-even);
+        }
+        
+        /* Description Column Limiter for PDF/View */
+        .col-desc {
+            max-width: 250px;
+            white-space: normal;
+            word-wrap: break-word;
+            word-break: break-word;
+        }
+
+        /* Icon Buttons Top Right */
+        .top-right-actions {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 5px;
+            font-size: 1.2rem;
+        }
+
+        /* Custom Colors */
+        .has-text-success-custom { color: #2ecc71; }
+        .has-text-danger-custom { color: #e74c3c; }
+
+        /* Specific Page Styles */
+        .saldo-card {
+            background: linear-gradient(135deg, var(--color-dark-bg), var(--color-primary));
+            color: white !important;
+        }
+        .saldo-card .title, .saldo-card .subtitle { color: white !important; }
+
+        /* Tabs Vertical */
+        .tabs-vertical-container {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 1.5rem;
+        }
+        @media (max-width: 768px) {
+            .tabs-vertical-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        .vertical-tabs a {
+            display: block;
+            padding: 12px 15px;
+            background: var(--card-bg);
+            margin-bottom: 5px;
+            border-radius: 6px;
+            border-left: 4px solid transparent;
+            cursor: pointer;
+            color: var(--text-main); /* Ensure visible text in dark mode */
+            transition: background 0.2s;
+        }
+        .vertical-tabs a:hover {
+            background-color: var(--row-even);
+        }
+        .vertical-tabs a.is-active {
+            border-left-color: var(--color-primary);
+            background: var(--row-even); /* Use row color for active bg */
+            font-weight: bold;
+            color: var(--color-primary);
+        }
+
+        /* Modal Styling Fixes */
+        .modal-card-head, .modal-card-foot {
+            background-color: var(--modal-head-foot-bg);
+            border-color: var(--input-border);
+        }
+        .modal-card-title {
+            color: var(--text-main);
+        }
+        .modal-card-body {
+            background-color: var(--modal-content-bg);
+            color: var(--text-main);
+        }
+        /* Footer buttons right aligned */
+        .modal-card-foot {
+            justify-content: flex-end;
+        }
+        
+        /* Summary Stats Text */
+        .summary-text-block {
+            background: var(--row-even);
+            border-left: 4px solid var(--color-primary);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+        .summary-text-block p {
+            margin-bottom: 4px;
+        }
+        
+        /* Toggle Button Custom */
+        .toggle-btn-group .button {
+            border: 1px solid var(--input-border);
+            color: var(--text-main);
+            background-color: var(--card-bg);
+        }
+        .toggle-btn-group .button.is-selected-success {
+            background-color: #2ecc71;
+            color: white;
+            border-color: #2ecc71;
+            z-index: 2;
+        }
+        .toggle-btn-group .button.is-selected-danger {
+            background-color: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+            z-index: 2;
+        }
+
+        /* Sort Button Active State */
+        .button.is-sort-active {
+            background-color: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+        }
+        
+        /* Utilities */
+        .is-hidden { display: none !important; }
+        .is-vcentered { display: flex; align-items: center; }
+    </style>
+</head>
+<body>
+
+    <!-- Theme Toggle -->
+    <div class="theme-toggle" onclick="toggleTheme()" title="Ganti Tema">
+        <i class="ph ph-moon" id="theme-icon"></i>
+    </div>
+
+    <!-- Burger Menu -->
+    <div class="burger-menu" onclick="toggleSidebar()">
+        <i class="ph ph-list"></i>
+    </div>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="has-text-right p-4 is-hidden-desktop" onclick="toggleSidebar()">
+                <i class="ph ph-x" style="font-size: 1.5rem; cursor: pointer;"></i>
+            </div>
+            <p class="menu-label pl-6">Aplikasi Keuangan</p>
+            <ul class="menu-list">
+                <li><a onclick="navigate('dashboard')" id="nav-dashboard" class="is-active"><i class="ph ph-squares-four"></i> Dashboard</a></li>
+                <li><a onclick="navigate('catatan')" id="nav-catatan"><i class="ph ph-notebook"></i> Catatan Transaksi</a></li>
+                <li><a onclick="navigate('penyimpanan')" id="nav-penyimpanan"><i class="ph ph-wallet"></i> Penyimpanan</a></li>
+                <li><a onclick="navigate('transfer')" id="nav-transfer"><i class="ph ph-arrows-left-right"></i> Transfer</a></li>
+            </ul>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content-area">
+            
+            <!-- PAGE: DASHBOARD -->
+            <div id="page-dashboard">
+                <h1 class="title is-4 mb-5">Dashboard Bulan Ini</h1>
+                
+                <!-- Summary Cards -->
+                <div class="columns is-mobile">
+                    <div class="column is-6">
+                        <div class="card p-4">
+                            <div class="is-flex is-align-items-center" style="height: 100%;">
+                                <div class="mr-4">
+                                     <i class="ph ph-trend-up has-text-success-custom is-size-3"></i>
+                                </div>
+                                <div>
+                                    <p class="heading has-text-success-custom mb-0"><b>Pemasukan Bulanan</b></p>
+                                    <p class="title is-5 has-text-success-custom mt-1" id="dash-pemasukan">Rp 0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-6">
+                        <div class="card p-4">
+                             <div class="is-flex is-align-items-center" style="height: 100%;">
+                                <div class="mr-4">
+                                     <i class="ph ph-trend-down has-text-danger-custom is-size-3"></i>
+                                </div>
+                                <div>
+                                    <p class="heading has-text-danger-custom mb-0"><b>Pengeluaran Bulanan</b></p>
+                                    <p class="title is-5 has-text-danger-custom mt-1" id="dash-pengeluaran">Rp 0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Saldo Card -->
+                <div class="card saldo-card p-5 mb-5">
+                    <p class="heading">Total Uang (Seluruh Penyimpanan)</p>
+                    <p class="title is-3" id="dash-total-uang">Rp 0</p>
+                    <div class="top-right-actions">
+                        <i class="ph ph-wallet" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+
+                <!-- Storage Details Cards -->
+                <div class="columns is-multiline" id="dash-storage-cards"></div>
+
+                <!-- Chart -->
+                <div class="card p-4">
+                    <div class="level is-mobile mb-2">
+                        <div class="level-left">
+                             <p class="title is-5">Analisa Keuangan (Bulan Ini)</p>
+                        </div>
+                        <div class="level-right">
+                             <button class="button is-small is-ghost" onclick="downloadChartPDF()"><i class="ph ph-download-simple is-size-5"></i></button>
+                        </div>
+                    </div>
+                    <div style="position: relative; height:300px; width:100%">
+                        <canvas id="financeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE: CATATAN -->
+            <div id="page-catatan" class="is-hidden">
+                <h1 class="title is-4 mb-5">Catatan Transaksi</h1>
+
+                <!-- Form Updated Layout -->
+                <div class="card p-5 mb-5">
+                    <div class="top-right-actions">
+                        <i class="ph ph-pencil-simple is-size-4"></i>
+                    </div>
+                    <form id="form-transaksi" onsubmit="handleTransactionSubmit(event)">
+                        <div class="columns is-multiline">
+                            <!-- Row 1: Date & Storage -->
+                            <div class="column is-6">
+                                <div class="field">
+                                    <label class="label">Tanggal</label>
+                                    <div class="control">
+                                        <input class="input" type="date" id="trx-date" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-6">
+                                <div class="field">
+                                    <label class="label">Penyimpanan</label>
+                                    <div class="control">
+                                        <div class="select is-fullwidth">
+                                            <select id="trx-storage" required>
+                                                <option value="" disabled selected>Pilih Penyimpanan</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Row 2: Type Toggle (Full Width) -->
+                            <div class="column is-12">
+                                <div class="field">
+                                    <label class="label">Jenis Transaksi</label>
+                                    <div class="control toggle-btn-group">
+                                        <div class="buttons has-addons is-fullwidth">
+                                            <button type="button" class="button is-fullwidth is-selected-success" id="btn-in" onclick="setTrxType('Pemasukan')">Pemasukan</button>
+                                            <button type="button" class="button is-fullwidth" id="btn-out" onclick="setTrxType('Pengeluaran')">Pengeluaran</button>
+                                        </div>
+                                        <input type="hidden" name="trx-type" id="trx-type-input" value="Pemasukan">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Row 3: Amount -->
+                            <div class="column is-12">
+                                <div class="field">
+                                    <label class="label">Nominal (Rp)</label>
+                                    <div class="control has-icons-left">
+                                        <input class="input" type="text" id="trx-amount" inputmode="numeric" placeholder="0" required onkeyup="formatCurrencyInput(this)">
+                                        <span class="icon is-small is-left">Rp</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Row 4: Description -->
+                            <div class="column is-12">
+                                <div class="field">
+                                    <label class="label">Deskripsi</label>
+                                    <div class="control">
+                                        <textarea class="textarea" id="trx-desc" placeholder="Keterangan transaksi..." required rows="2"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="buttons is-right">
+                            <button type="submit" class="button is-primary"><i class="ph ph-plus mr-1"></i> Tambah</button>
+                            <button type="button" class="button is-light" onclick="resetForm('form-transaksi')"><i class="ph ph-arrow-counter-clockwise mr-1"></i> Reset</button>
+                            <button type="button" class="button is-warning" onclick="deleteLastTransaction()"><i class="ph ph-backspace mr-1"></i> Hapus Terakhir</button>
+                            <button type="button" class="button is-danger" onclick="deleteAllData()"><i class="ph ph-trash mr-1"></i> Hapus Semua Data</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Summary Stats -->
+                <div class="summary-text-block" id="summary-stats-catatan"></div>
+
+                <!-- Filters & Table Actions -->
+                <div class="level is-mobile mb-3" style="flex-wrap: wrap; gap: 10px;">
+                    <div class="level-left">
+                        <p class="subtitle is-5 font-weight-bold" id="table-period-label">Data Bulan Ini</p>
+                    </div>
+                    <div class="level-right">
+                        <!-- Grouped Buttons including Sort -->
+                        <div class="buttons are-medium">
+                             <button class="button is-info is-light is-medium" id="sort-asc-btn" onclick="sortData('asc', 'table-keuangan')" title="Ascending"><i class="ph ph-arrow-up"></i></button>
+                             <button class="button is-info is-light is-medium" id="sort-desc-btn" onclick="sortData('desc', 'table-keuangan')" title="Descending"><i class="ph ph-arrow-down"></i></button>
+                        
+                            <button class="button is-info is-light is-medium" onclick="openModal('modal-range')" title="Rentang Riwayat"><i class="ph ph-calendar-plus"></i></button>
+                            <button class="button is-info is-light is-medium" onclick="openModal('modal-monthly')" title="Riwayat Bulanan"><i class="ph ph-calendar"></i></button>
+                            <button class="button is-info is-light is-medium" onclick="openModal('modal-yearly')" title="Riwayat Tahunan"><i class="ph ph-calendar-blank"></i></button>
+                            <button class="button is-link is-medium" onclick="downloadPDF('table-keuangan', 'Catatan Transaksi')" title="Unduh PDF Landscape"><i class="ph ph-file-pdf"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="table-container table-responsive-wrapper">
+                    <table class="table is-fullwidth" id="table-keuangan">
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Penyimpanan</th>
+                                <th>Transaksi</th>
+                                <th style="min-width: 200px;">Deskripsi</th>
+                                <th class="has-text-right">Saldo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-keuangan">
+                            <!-- Data injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PAGE: PENYIMPANAN -->
+            <div id="page-penyimpanan" class="is-hidden">
+                <h1 class="title is-4 mb-5">Manajemen Penyimpanan</h1>
+                
+                <div class="tabs-vertical-container">
+                    <!-- Left: Navigation / List -->
+                    <div class="vertical-tabs" id="storage-tabs">
+                        <a class="is-active" onclick="switchStorageTab('all')">Daftar Penyimpanan (Utama)</a>
+                        <!-- Dynamic Storage Tabs -->
+                    </div>
+
+                    <!-- Right: Content -->
+                    <div class="storage-content">
+                        <!-- Content for 'all' -->
+                        <div id="storage-view-all">
+                            <button class="button is-primary mb-4" onclick="openModal('modal-add-storage')">
+                                <i class="ph ph-plus-circle mr-2"></i> Tambah Simpanan
+                            </button>
+                            
+                            <div class="table-container table-responsive-wrapper">
+                                <table class="table is-fullwidth" id="table-penyimpanan-list">
+                                    <thead>
+                                        <tr>
+                                            <th>Aksi</th>
+                                            <th>Penyimpanan</th>
+                                            <th class="has-text-right">Total Saldo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-penyimpanan-list"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Content for specific storage -->
+                        <div id="storage-view-detail" class="is-hidden">
+                            <div class="card p-4 mb-4" style="background: linear-gradient(135deg, var(--color-primary), var(--color-info)); color: white;">
+                                <p class="is-size-7" style="color: #e0f2ff;">Total Saldo Saat Ini</p>
+                                <p class="title is-3" style="color: white;" id="detail-storage-balance">Rp 0</p>
+                            </div>
+
+                            <div class="summary-text-block" id="summary-stats-storage"></div>
+
+                            <div class="level is-mobile mb-3" style="flex-wrap: wrap;">
+                                <div class="level-left">
+                                    <h2 class="subtitle is-5" id="detail-storage-name">Nama Simpanan</h2>
+                                </div>
+                                <div class="level-right">
+                                    <div class="buttons are-medium">
+                                         <button class="button is-info is-light is-medium" id="sort-asc-storage" onclick="sortData('asc', 'table-storage-detail')"><i class="ph ph-arrow-up"></i></button>
+                                         <button class="button is-info is-light is-medium" id="sort-desc-storage" onclick="sortData('desc', 'table-storage-detail')"><i class="ph ph-arrow-down"></i></button>
+                                    
+                                        <button class="button is-info is-light is-medium" onclick="openModal('modal-range')" title="Rentang"><i class="ph ph-calendar-plus"></i></button>
+                                        <button class="button is-info is-light is-medium" onclick="openModal('modal-monthly')" title="Bulanan"><i class="ph ph-calendar"></i></button>
+                                        <button class="button is-info is-light is-medium" onclick="openModal('modal-yearly')" title="Tahunan"><i class="ph ph-calendar-blank"></i></button>
+                                        <button class="button is-link is-medium" onclick="downloadStoragePDF()" title="PDF Landscape"><i class="ph ph-file-pdf"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="table-container table-responsive-wrapper">
+                                <table class="table is-fullwidth" id="table-storage-detail">
+                                    <thead>
+                                        <tr>
+                                            <th>Tanggal</th>
+                                            <th>Transaksi</th>
+                                            <th style="min-width: 200px;">Deskripsi</th>
+                                            <th class="has-text-right">Saldo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-storage-detail"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE: TRANSFER -->
+            <div id="page-transfer" class="is-hidden">
+                <h1 class="title is-4 mb-5">Transfer Antar Penyimpanan</h1>
+                
+                <div class="card p-5">
+                    <div class="top-right-actions">
+                         <i class="ph ph-arrows-left-right is-size-4"></i>
+                    </div>
+                    <form id="form-transfer" onsubmit="handleTransferSubmit(event)">
+                        <div class="columns is-multiline">
+                             <div class="column is-12">
+                                <div class="field">
+                                    <label class="label">Tanggal Transfer</label>
+                                    <div class="control">
+                                        <input class="input" type="date" id="trf-date" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-6">
+                                <div class="field">
+                                    <label class="label">Dari Penyimpanan (Sumber)</label>
+                                    <div class="control">
+                                        <div class="select is-fullwidth">
+                                            <select id="trf-source" required>
+                                                <option value="" disabled selected>Pilih Sumber</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-6">
+                                <div class="field">
+                                    <label class="label">Ke Penyimpanan (Tujuan)</label>
+                                    <div class="control">
+                                        <div class="select is-fullwidth">
+                                            <select id="trf-dest" required>
+                                                <option value="" disabled selected>Pilih Tujuan</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-12">
+                                <div class="field">
+                                    <label class="label">Nominal Transfer (Rp)</label>
+                                    <div class="control has-icons-left">
+                                        <input class="input" type="text" id="trf-amount" inputmode="numeric" placeholder="0" required onkeyup="formatCurrencyInput(this)">
+                                        <span class="icon is-small is-left">Rp</span>
+                                    </div>
+                                </div>
+                            </div>
+                             <div class="column is-6">
+                                <div class="field">
+                                    <label class="label">Catatan Pengirim</label>
+                                    <div class="control">
+                                        <textarea class="textarea" id="trf-desc-source" rows="2" placeholder="Ex: Transfer ke..." required></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-6">
+                                <div class="field">
+                                    <label class="label">Catatan Penerima</label>
+                                    <div class="control">
+                                        <textarea class="textarea" id="trf-desc-dest" rows="2" placeholder="Ex: Transfer dari..." required></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="buttons is-right">
+                             <button type="submit" class="button is-primary"><i class="ph ph-paper-plane-right mr-2"></i> Kirim Uang</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODALS -->
+
+    <!-- Modal Rentang -->
+    <div class="modal" id="modal-range">
+        <div class="modal-background" onclick="closeModal('modal-range')"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Filter Rentang Waktu</p>
+                <button class="delete" aria-label="close" onclick="closeModal('modal-range')"></button>
+            </header>
+            <section class="modal-card-body">
+                <div class="field">
+                    <label class="label">Dari Tanggal</label>
+                    <input class="input" type="date" id="filter-start">
+                </div>
+                <div class="field">
+                    <label class="label">Sampai Tanggal</label>
+                    <input class="input" type="date" id="filter-end">
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button" onclick="closeModal('modal-range')">Batal</button>
+                <button class="button is-success" onclick="applyFilter('range')">Ok</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Modal Bulanan -->
+    <div class="modal" id="modal-monthly">
+        <div class="modal-background" onclick="closeModal('modal-monthly')"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Filter Bulanan</p>
+                <button class="delete" aria-label="close" onclick="closeModal('modal-monthly')"></button>
+            </header>
+            <section class="modal-card-body">
+                <div class="field">
+                    <label class="label">Bulan</label>
+                    <div class="select is-fullwidth">
+                        <select id="filter-month-select">
+                            <option value="1">Januari</option>
+                            <option value="2">Februari</option>
+                            <option value="3">Maret</option>
+                            <option value="4">April</option>
+                            <option value="5">Mei</option>
+                            <option value="6">Juni</option>
+                            <option value="7">Juli</option>
+                            <option value="8">Agustus</option>
+                            <option value="9">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Tahun</label>
+                    <input class="input" type="text" inputmode="numeric" id="filter-month-year" placeholder="YYYY">
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button" onclick="closeModal('modal-monthly')">Batal</button>
+                <button class="button is-success" onclick="applyFilter('monthly')">Ok</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Modal Tahunan -->
+    <div class="modal" id="modal-yearly">
+        <div class="modal-background" onclick="closeModal('modal-yearly')"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Filter Tahunan</p>
+                <button class="delete" aria-label="close" onclick="closeModal('modal-yearly')"></button>
+            </header>
+            <section class="modal-card-body">
+                <div class="field">
+                    <label class="label">Tahun</label>
+                    <input class="input" type="text" inputmode="numeric" id="filter-year-input" placeholder="YYYY">
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button" onclick="closeModal('modal-yearly')">Batal</button>
+                <button class="button is-success" onclick="applyFilter('yearly')">Ok</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Penyimpanan -->
+    <div class="modal" id="modal-add-storage">
+        <div class="modal-background" onclick="closeModal('modal-add-storage')"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Tambah Penyimpanan Baru</p>
+                <button class="delete" aria-label="close" onclick="closeModal('modal-add-storage')"></button>
+            </header>
+            <section class="modal-card-body">
+                <div class="field">
+                    <label class="label">Nama Penyimpanan</label>
+                    <input class="input" type="text" id="new-storage-name" placeholder="Ex: Dompet, Bank BCA">
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button" onclick="closeModal('modal-add-storage')">Batal</button>
+                <button class="button is-success" onclick="saveNewStorage()">Simpan</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Modal Edit Penyimpanan -->
+    <div class="modal" id="modal-edit-storage">
+        <div class="modal-background" onclick="closeModal('modal-edit-storage')"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Edit Nama Penyimpanan</p>
+                <button class="delete" aria-label="close" onclick="closeModal('modal-edit-storage')"></button>
+            </header>
+            <section class="modal-card-body">
+                <input type="hidden" id="edit-storage-id">
+                <div class="field">
+                    <label class="label">Nama Baru</label>
+                    <input class="input" type="text" id="edit-storage-name">
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button" onclick="closeModal('modal-edit-storage')">Batal</button>
+                <button class="button is-success" onclick="saveEditStorage()">Update</button>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. SUPABASE CONFIGURATION ---
+        const SUPABASE_URL = 'https://gscsuzovbuvckkwukiky.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzY3N1em92YnV2Y2trd3VraWt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwNzcwMjQsImV4cCI6MjA3OTY1MzAyNH0.SyYeUFXJ0MKx_2d5EWoM3W4pqQUomWeqxOsfSwApdz4';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // --- 2. GLOBAL STATE ---
+        let currentStorageTabId = null; 
+        let currentStorageName = "";
+        let currentStorageBalance = 0;
+        let chartInstance = null;
+        let activeFilter = { type: 'currentMonth' }; 
+        // Track stats globally for PDF use
+        let summaryStats = {
+            mIn: 0, mOut: 0, yIn: 0, yOut: 0
+        };
+
+        // --- 3. UI HELPERS & THEME ---
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('theme-icon').classList.replace('ph-moon', 'ph-sun');
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const icon = document.getElementById('theme-icon');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.classList.replace('ph-moon', 'ph-sun');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                icon.classList.replace('ph-sun', 'ph-moon');
+                localStorage.setItem('theme', 'light');
+            }
+            if(chartInstance) updateChartColors();
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('is-active');
+        }
+
+        // Toggle Buttons Logic (Radio Replacement)
+        function setTrxType(type) {
+            document.getElementById('trx-type-input').value = type;
+            const btnIn = document.getElementById('btn-in');
+            const btnOut = document.getElementById('btn-out');
+            
+            // Reset
+            btnIn.classList.remove('is-selected-success');
+            btnOut.classList.remove('is-selected-danger');
+            btnIn.classList.remove('is-selected');
+            btnOut.classList.remove('is-selected');
+
+            if (type === 'Pemasukan') {
+                btnIn.classList.add('is-selected-success');
+            } else {
+                btnOut.classList.add('is-selected-danger');
+            }
+        }
+
+        // --- 4. NAVIGATION & INIT ---
+        function navigate(page) {
+            document.querySelectorAll('[id^="page-"]').forEach(el => el.classList.add('is-hidden'));
+            document.querySelectorAll('.menu-list a').forEach(el => el.classList.remove('is-active'));
+            document.getElementById(`page-${page}`).classList.remove('is-hidden');
+            document.getElementById(`nav-${page}`).classList.add('is-active');
+            if (window.innerWidth < 1024) document.getElementById('sidebar').classList.remove('is-active');
+
+            if (page === 'dashboard') loadDashboard();
+            if (page === 'catatan') loadCatatan();
+            if (page === 'penyimpanan') loadPenyimpanan();
+            if (page === 'transfer') loadTransfer();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('trx-date').value = today;
+            document.getElementById('trf-date').value = today;
+            loadDashboard();
+        });
+
+        // --- 5. DATA FORMATTING ---
+        function formatRupiah(number) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+        }
+
+        function unformatRupiah(str) {
+            return parseInt(str.replace(/[^0-9]/g, '')) || 0;
+        }
+
+        function formatCurrencyInput(input) {
+            let val = input.value.replace(/[^0-9]/g, '');
+            if (val === '') { input.value = ''; return; }
+            input.value = new Intl.NumberFormat('id-ID').format(val);
+        }
+
+        function formatDate(dateStr) {
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return new Date(dateStr).toLocaleDateString('id-ID', options);
+        }
+
+        // --- CALCULATE GLOBAL STATS (Monthly/Yearly) ---
+        async function calculateSummaryStats(filterStorageId = null) {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth(); 
+
+            // Current Month Range
+            const startMonth = new Date(year, month, 1).toISOString();
+            const endMonth = new Date(year, month + 1, 0).toISOString();
+            
+            // Current Year Range
+            const startYear = new Date(year, 0, 1).toISOString();
+            const endYear = new Date(year, 11, 31).toISOString();
+
+            let qMonth = supabase.from('keuangan').select('saldo, transaksi').gte('tanggal', startMonth).lte('tanggal', endMonth);
+            let qYear = supabase.from('keuangan').select('saldo, transaksi').gte('tanggal', startYear).lte('tanggal', endYear);
+
+            if(filterStorageId) {
+                qMonth = qMonth.eq('id_sim', filterStorageId);
+                qYear = qYear.eq('id_sim', filterStorageId);
+            }
+
+            const resMonth = await qMonth;
+            const resYear = await qYear;
+
+            let mIn = 0, mOut = 0, yIn = 0, yOut = 0;
+
+            if(resMonth.data) {
+                resMonth.data.forEach(t => {
+                    if(t.transaksi === 'Pemasukan') mIn += t.saldo;
+                    else mOut += t.saldo;
+                });
+            }
+            if(resYear.data) {
+                resYear.data.forEach(t => {
+                    if(t.transaksi === 'Pemasukan') yIn += t.saldo;
+                    else yOut += t.saldo;
+                });
+            }
+
+            summaryStats = { mIn, mOut, yIn, yOut };
+            return summaryStats;
+        }
+
+        function renderSummaryText(containerId, stats) {
+            const el = document.getElementById(containerId);
+            el.innerHTML = `
+                <div class="columns is-mobile is-multiline">
+                    <div class="column is-6">
+                        <p class="has-text-grey-light is-size-7">Bulan Ini</p>
+                        <p class="has-text-success-custom is-size-7 font-weight-bold">Masuk: ${formatRupiah(stats.mIn)}</p>
+                        <p class="has-text-danger-custom is-size-7 font-weight-bold">Keluar: ${formatRupiah(stats.mOut)}</p>
+                    </div>
+                    <div class="column is-6">
+                        <p class="has-text-grey-light is-size-7">Tahun Ini</p>
+                        <p class="has-text-success-custom is-size-7 font-weight-bold">Masuk: ${formatRupiah(stats.yIn)}</p>
+                        <p class="has-text-danger-custom is-size-7 font-weight-bold">Keluar: ${formatRupiah(stats.yOut)}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- 6. PAGE LOGIC: DASHBOARD ---
+        async function loadDashboard() {
+            const date = new Date();
+            const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
+            const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString();
+
+            const { data: trxData, error } = await supabase
+                .from('keuangan')
+                .select('*')
+                .gte('tanggal', firstDay)
+                .lte('tanggal', lastDay);
+
+            if (error) { console.error(error); return; }
+
+            let income = 0;
+            let expense = 0;
+            const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+            const chartLabels = Array.from({length: daysInMonth}, (_, i) => i + 1);
+            const chartDataIncome = new Array(daysInMonth).fill(0);
+            const chartDataExpense = new Array(daysInMonth).fill(0);
+
+            trxData.forEach(trx => {
+                const day = new Date(trx.tanggal).getDate();
+                if (trx.transaksi === 'Pemasukan') {
+                    income += trx.saldo;
+                    chartDataIncome[day-1] += trx.saldo;
+                } else {
+                    expense += trx.saldo;
+                    chartDataExpense[day-1] += trx.saldo;
+                }
+            });
+
+            document.getElementById('dash-pemasukan').innerText = formatRupiah(income);
+            document.getElementById('dash-pengeluaran').innerText = formatRupiah(expense);
+
+            const { data: storeData } = await supabase.from('penyimpanan').select('*');
+            const { data: allTrx } = await supabase.from('keuangan').select('id_sim, saldo, transaksi');
+            
+            let grandTotal = 0;
+            const storageBalances = {};
+            storeData.forEach(s => storageBalances[s.id_sim] = { name: s.namasim, balance: 0 });
+
+            allTrx.forEach(t => {
+                if (storageBalances[t.id_sim]) {
+                    if (t.transaksi === 'Pemasukan') storageBalances[t.id_sim].balance += t.saldo;
+                    else storageBalances[t.id_sim].balance -= t.saldo;
+                }
+            });
+
+            const container = document.getElementById('dash-storage-cards');
+            container.innerHTML = '';
+            
+            for (const [id, store] of Object.entries(storageBalances)) {
+                grandTotal += store.balance;
+                const col = document.createElement('div');
+                col.className = 'column is-3-desktop is-6-tablet';
+                col.innerHTML = `
+                    <div class="card p-3">
+                        <p class="is-size-7 has-text-grey-light">Penyimpanan</p>
+                        <p class="has-text-weight-bold is-size-5 mb-1">${store.name}</p>
+                        <p class="has-text-info">${formatRupiah(store.balance)}</p>
+                    </div>
+                `;
+                container.appendChild(col);
+            }
+
+            document.getElementById('dash-total-uang').innerText = formatRupiah(grandTotal);
+            renderChart(chartLabels, chartDataIncome, chartDataExpense);
+        }
+
+        function renderChart(labels, incomeData, expenseData) {
+            const ctx = document.getElementById('financeChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            const isDark = document.body.classList.contains('dark-mode');
+            const gridColor = isDark ? '#1e3a5f' : '#f0f0f0';
+            const textColor = isDark ? '#d0efff' : '#666';
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Pemasukan',
+                            data: incomeData,
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Pengeluaran',
+                            data: expenseData,
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            suggestedMax: 100000, 
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        },
+                        x: {
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: textColor } }
+                    }
+                }
+            });
+        }
+        
+        function updateChartColors() {
+            if (document.getElementById('page-dashboard').classList.contains('is-hidden')) return;
+            loadDashboard();
+        }
+
+        // --- 7. PAGE LOGIC: CATATAN (TRANSACTIONS) ---
+        async function loadCatatan() {
+            const { data: stores } = await supabase.from('penyimpanan').select('*');
+            const select = document.getElementById('trx-storage');
+            select.innerHTML = '<option value="" disabled selected>Pilih Penyimpanan</option>';
+            stores.forEach(s => {
+                select.innerHTML += `<option value="${s.id_sim}">${s.namasim}</option>`;
+            });
+
+            activeFilter = { type: 'currentMonth' };
+            document.getElementById('table-period-label').innerText = "Data Bulan Ini";
+            fetchTransactions();
+        }
+
+        async function fetchTransactions() {
+            // Calculate stats regardless of current filter
+            const stats = await calculateSummaryStats(null);
+            renderSummaryText('summary-stats-catatan', stats);
+
+            let query = supabase.from('keuangan').select(`*, penyimpanan (namasim)`);
+
+            if (activeFilter.type === 'currentMonth') {
+                const date = new Date();
+                const first = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
+                const last = new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString();
+                query = query.gte('tanggal', first).lte('tanggal', last);
+            } else if (activeFilter.type === 'range') {
+                query = query.gte('tanggal', activeFilter.start).lte('tanggal', activeFilter.end);
+            } else if (activeFilter.type === 'monthly') {
+                const first = new Date(activeFilter.year, activeFilter.month - 1, 1).toISOString();
+                const last = new Date(activeFilter.year, activeFilter.month, 0).toISOString();
+                query = query.gte('tanggal', first).lte('tanggal', last);
+            } else if (activeFilter.type === 'yearly') {
+                const first = new Date(activeFilter.year, 0, 1).toISOString();
+                const last = new Date(activeFilter.year, 12, 0).toISOString();
+                query = query.gte('tanggal', first).lte('tanggal', last);
+            }
+
+            const { data, error } = await query.order('tanggal', { ascending: false });
+            
+            if (error) { Toast.fire({icon:'error', title: 'Gagal memuat data'}); return; }
+
+            const tbody = document.getElementById('tbody-keuangan');
+            tbody.innerHTML = '';
+
+            data.forEach(row => {
+                const colorClass = row.transaksi === 'Pemasukan' ? 'has-text-success-custom' : 'has-text-danger-custom';
+                tbody.innerHTML += `
+                    <tr>
+                        <td data-date="${row.tanggal}">${formatDate(row.tanggal)}</td>
+                        <td>${row.penyimpanan ? row.penyimpanan.namasim : '-'}</td>
+                        <td><span class="tag ${row.transaksi === 'Pemasukan' ? 'is-success' : 'is-danger'} is-light">${row.transaksi}</span></td>
+                        <td class="col-desc">${row.deskripsi}</td>
+                        <td class="has-text-right font-weight-bold ${colorClass}">${formatRupiah(row.saldo)}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function handleTransactionSubmit(e) {
+            e.preventDefault();
+            const date = document.getElementById('trx-date').value;
+            const storageId = document.getElementById('trx-storage').value;
+            const type = document.getElementById('trx-type-input').value; // from hidden input
+            const amount = unformatRupiah(document.getElementById('trx-amount').value);
+            const desc = document.getElementById('trx-desc').value;
+
+            if (!amount || amount <= 0) return Toast.fire({icon: 'warning', title: 'Nominal tidak valid'});
+
+            const { error } = await supabase.from('keuangan').insert([{
+                id_sim: storageId,
+                tanggal: date,
+                transaksi: type,
+                saldo: amount,
+                deskripsi: desc
+            }]);
+
+            if (error) {
+                Toast.fire({icon:'error', title: error.message});
+            } else {
+                Toast.fire({icon:'success', title: 'Data Berhasil Ditambah'});
+                resetForm('form-transaksi');
+                fetchTransactions();
+            }
+        }
+
+        function resetForm(formId) {
+            document.getElementById(formId).reset();
+            const today = new Date().toISOString().split('T')[0];
+            if(formId === 'form-transaksi') {
+                document.getElementById('trx-date').value = today;
+                setTrxType('Pemasukan'); // Reset to Pemasukan
+            }
+            if(formId === 'form-transfer') document.getElementById('trf-date').value = today;
+        }
+
+        async function deleteLastTransaction() {
+            const { data, error } = await supabase.from('keuangan').select('id_keung').order('id_keung', {ascending: false}).limit(1);
+            if (data && data.length > 0) {
+                const idToDelete = data[0].id_keung;
+                const { error: delError } = await supabase.from('keuangan').delete().eq('id_keung', idToDelete);
+                if (!delError) {
+                    Toast.fire({icon:'success', title: 'Baris Terakhir Dihapus'});
+                    fetchTransactions();
+                }
+            } else {
+                Toast.fire({icon:'info', title: 'Data kosong'});
+            }
+        }
+
+        function deleteAllData() {
+            Swal.fire({
+                title: 'Hapus Semua Data?',
+                text: "Semua data keuangan akan hilang permanen!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e74c3c',
+                confirmButtonText: 'Ya, Hapus Semua!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Yakin 100%?',
+                        text: "Tindakan ini tidak bisa dibatalkan.",
+                        icon: 'error',
+                        showCancelButton: true,
+                        confirmButtonText: 'HANCURKAN DATA'
+                    }).then(async (res2) => {
+                        if (res2.isConfirmed) {
+                             const { error } = await supabase.from('keuangan').delete().neq('id_keung', 0);
+                             if(!error) {
+                                 Toast.fire({icon:'success', title: 'Semua Data Terhapus'});
+                                 fetchTransactions();
+                             } else {
+                                 Toast.fire({icon:'error', title: 'Gagal Menghapus'});
+                             }
+                        }
+                    });
+                }
+            });
+        }
+
+        // --- 8. FILTERS & MODALS ---
+        function openModal(id) { document.getElementById(id).classList.add('is-active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('is-active'); }
+
+        function applyFilter(type) {
+            if (type === 'range') {
+                const start = document.getElementById('filter-start').value;
+                const end = document.getElementById('filter-end').value;
+                if(!start || !end) return Toast.fire({icon:'warning', title:'Isi kedua tanggal'});
+                activeFilter = { type: 'range', start, end };
+                document.getElementById('table-period-label').innerText = `Rentang: ${start} s/d ${end}`;
+                closeModal('modal-range');
+            } else if (type === 'monthly') {
+                const m = document.getElementById('filter-month-select').value;
+                const y = document.getElementById('filter-month-year').value;
+                if(!y) return Toast.fire({icon:'warning', title:'Isi tahun'});
+                activeFilter = { type: 'monthly', month: m, year: y };
+                document.getElementById('table-period-label').innerText = `Periode: Bulan ${m}, ${y}`;
+                closeModal('modal-monthly');
+            } else if (type === 'yearly') {
+                const y = document.getElementById('filter-year-input').value;
+                if(!y) return Toast.fire({icon:'warning', title:'Isi tahun'});
+                activeFilter = { type: 'yearly', year: y };
+                document.getElementById('table-period-label').innerText = `Periode: Tahun ${y}`;
+                closeModal('modal-yearly');
+            }
+            
+            if (!document.getElementById('page-catatan').classList.contains('is-hidden')) fetchTransactions();
+            if (currentStorageTabId) fetchDetailStorage(currentStorageTabId);
+        }
+
+        // --- 9. PAGE LOGIC: PENYIMPANAN ---
+        async function loadPenyimpanan() {
+            const { data } = await supabase.from('penyimpanan').select('*').order('id_sim', {ascending: true});
+            const tabs = document.getElementById('storage-tabs');
+            
+            tabs.innerHTML = `<a class="${currentStorageTabId === null ? 'is-active' : ''}" onclick="switchStorageTab('all')">Daftar Penyimpanan</a>`;
+            
+            data.forEach(s => {
+                tabs.innerHTML += `<a class="${currentStorageTabId == s.id_sim ? 'is-active' : ''}" onclick="switchStorageTab('${s.id_sim}', '${s.namasim}')">${s.namasim}</a>`;
+            });
+
+            if(currentStorageTabId === null) fetchStorageList();
+            else fetchDetailStorage(currentStorageTabId);
+        }
+
+        async function fetchStorageList() {
+            const { data: stores } = await supabase.from('penyimpanan').select('*');
+            const { data: trxs } = await supabase.from('keuangan').select('id_sim, saldo, transaksi');
+            
+            const balances = {};
+            stores.forEach(s => balances[s.id_sim] = 0);
+            
+            trxs.forEach(t => {
+                if (balances[t.id_sim] !== undefined) {
+                    if (t.transaksi === 'Pemasukan') balances[t.id_sim] += t.saldo;
+                    else balances[t.id_sim] -= t.saldo;
+                }
+            });
+
+            const tbody = document.getElementById('tbody-penyimpanan-list');
+            tbody.innerHTML = '';
+            
+            stores.forEach((s) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <button class="button is-small is-info is-light" onclick="openEditStorage('${s.id_sim}', '${s.namasim}')"><i class="ph ph-pencil"></i></button>
+                        <button class="button is-small is-danger is-light" onclick="deleteStorage('${s.id_sim}')"><i class="ph ph-trash"></i></button>
+                    </td>
+                    <td>${s.namasim}</td>
+                    <td class="has-text-right font-weight-bold">${formatRupiah(balances[s.id_sim])}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function switchStorageTab(id, name) {
+            currentStorageTabId = id === 'all' ? null : id;
+            currentStorageName = name || "";
+            
+            document.querySelectorAll('#storage-tabs a').forEach(a => a.classList.remove('is-active'));
+            
+            if (id === 'all') {
+                document.getElementById('storage-view-all').classList.remove('is-hidden');
+                document.getElementById('storage-view-detail').classList.add('is-hidden');
+                loadPenyimpanan(); 
+            } else {
+                document.getElementById('storage-view-all').classList.add('is-hidden');
+                document.getElementById('storage-view-detail').classList.remove('is-hidden');
+                document.getElementById('detail-storage-name').innerText = `Riwayat: ${name}`;
+                
+                const links = document.querySelectorAll('#storage-tabs a');
+                links.forEach(l => {
+                    if(l.innerText === name) l.classList.add('is-active');
+                });
+                
+                activeFilter = { type: 'currentMonth' }; 
+                fetchDetailStorage(id);
+            }
+        }
+
+        async function fetchDetailStorage(idSim) {
+            // Stats
+            const stats = await calculateSummaryStats(idSim);
+            renderSummaryText('summary-stats-storage', stats);
+
+            // Total Balance for this storage (All Time)
+            const { data: allTimeTrx } = await supabase.from('keuangan').select('saldo, transaksi').eq('id_sim', idSim);
+            let bal = 0;
+            if(allTimeTrx) {
+                allTimeTrx.forEach(t => {
+                     if(t.transaksi === 'Pemasukan') bal += t.saldo;
+                     else bal -= t.saldo;
+                });
+            }
+            currentStorageBalance = bal;
+            document.getElementById('detail-storage-balance').innerText = formatRupiah(bal);
+
+            let query = supabase.from('keuangan').select('*').eq('id_sim', idSim);
+
+            if (activeFilter.type === 'currentMonth') {
+                const date = new Date();
+                const first = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
+                const last = new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString();
+                query = query.gte('tanggal', first).lte('tanggal', last);
+            } else if (activeFilter.type === 'range') {
+                query = query.gte('tanggal', activeFilter.start).lte('tanggal', activeFilter.end);
+            } else if (activeFilter.type === 'monthly') {
+                const first = new Date(activeFilter.year, activeFilter.month - 1, 1).toISOString();
+                const last = new Date(activeFilter.year, activeFilter.month, 0).toISOString();
+                query = query.gte('tanggal', first).lte('tanggal', last);
+            } else if (activeFilter.type === 'yearly') {
+                const first = new Date(activeFilter.year, 0, 1).toISOString();
+                const last = new Date(activeFilter.year, 12, 0).toISOString();
+                query = query.gte('tanggal', first).lte('tanggal', last);
+            }
+
+            const { data, error } = await query.order('tanggal', {ascending: false});
+            
+            const tbody = document.getElementById('tbody-storage-detail');
+            tbody.innerHTML = '';
+
+            if(data) {
+                data.forEach(row => {
+                    const colorClass = row.transaksi === 'Pemasukan' ? 'has-text-success-custom' : 'has-text-danger-custom';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td data-date="${row.tanggal}">${formatDate(row.tanggal)}</td>
+                            <td><span class="tag ${row.transaksi === 'Pemasukan' ? 'is-success' : 'is-danger'} is-light">${row.transaksi}</span></td>
+                            <td class="col-desc">${row.deskripsi}</td>
+                            <td class="has-text-right ${colorClass}">${formatRupiah(row.saldo)}</td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        async function saveNewStorage() {
+            const name = document.getElementById('new-storage-name').value;
+            if(!name) return;
+            const { error } = await supabase.from('penyimpanan').insert([{ namasim: name }]);
+            if(!error) {
+                Toast.fire({icon:'success', title: 'Penyimpanan Ditambah'});
+                closeModal('modal-add-storage');
+                loadPenyimpanan();
+            }
+        }
+
+        function openEditStorage(id, name) {
+            document.getElementById('edit-storage-id').value = id;
+            document.getElementById('edit-storage-name').value = name;
+            openModal('modal-edit-storage');
+        }
+
+        async function saveEditStorage() {
+            const id = document.getElementById('edit-storage-id').value;
+            const name = document.getElementById('edit-storage-name').value;
+            const { error } = await supabase.from('penyimpanan').update({ namasim: name }).eq('id_sim', id);
+            if(!error) {
+                Toast.fire({icon:'success', title: 'Berhasil diupdate'});
+                closeModal('modal-edit-storage');
+                loadPenyimpanan();
+            }
+        }
+
+        async function deleteStorage(id) {
+            Swal.fire({
+                title: 'Hapus Penyimpanan?',
+                text: "Data terkait akan ikut terhapus.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Ya, Hapus'
+            }).then(async (result) => {
+                if(result.isConfirmed) {
+                    await supabase.from('keuangan').delete().eq('id_sim', id);
+                    const { error } = await supabase.from('penyimpanan').delete().eq('id_sim', id);
+                    if(!error) {
+                        Toast.fire({icon:'success', title: 'Terhapus'});
+                        loadPenyimpanan();
+                    } else {
+                        Toast.fire({icon:'error', title: 'Gagal Hapus'});
+                    }
+                }
+            })
+        }
+
+        // --- 10. PAGE LOGIC: TRANSFER & VALIDATION ---
+        async function loadTransfer() {
+            const { data: stores } = await supabase.from('penyimpanan').select('*');
+            const src = document.getElementById('trf-source');
+            const dst = document.getElementById('trf-dest');
+            
+            src.innerHTML = '<option value="" disabled selected>Pilih Sumber</option>';
+            dst.innerHTML = '<option value="" disabled selected>Pilih Tujuan</option>';
+            
+            stores.forEach(s => {
+                const opt = `<option value="${s.id_sim}">${s.namasim}</option>`;
+                src.innerHTML += opt;
+                dst.innerHTML += opt;
+            });
+        }
+
+        async function handleTransferSubmit(e) {
+            e.preventDefault();
+            const date = document.getElementById('trf-date').value;
+            const srcId = document.getElementById('trf-source').value;
+            const dstId = document.getElementById('trf-dest').value;
+            const amount = unformatRupiah(document.getElementById('trf-amount').value);
+            const descSrc = document.getElementById('trf-desc-source').value;
+            const descDst = document.getElementById('trf-desc-dest').value;
+
+            if(srcId === dstId) return Toast.fire({icon:'error', title: 'Sumber dan Tujuan sama'});
+            if(amount <= 0) return Toast.fire({icon:'warning', title: 'Nominal salah'});
+
+            // VALIDATION: Check Source Balance
+            const { data: trxSource } = await supabase.from('keuangan').select('saldo, transaksi').eq('id_sim', srcId);
+            let currentSrcBalance = 0;
+            if(trxSource) {
+                trxSource.forEach(t => {
+                    if(t.transaksi === 'Pemasukan') currentSrcBalance += t.saldo;
+                    else currentSrcBalance -= t.saldo;
+                });
+            }
+
+            if (currentSrcBalance < amount) {
+                return Swal.fire({
+                    icon: 'error',
+                    title: 'Saldo Tidak Cukup!',
+                    text: `Saldo saat ini: ${formatRupiah(currentSrcBalance)}. Tidak cukup untuk transfer ${formatRupiah(amount)}.`
+                });
+            }
+
+            // Execute Transfer
+            const op1 = await supabase.from('keuangan').insert([{
+                id_sim: srcId, tanggal: date, transaksi: 'Pengeluaran', saldo: amount, deskripsi: descSrc
+            }]);
+
+            if(op1.error) return Toast.fire({icon:'error', title: 'Gagal tahap 1: ' + op1.error.message});
+
+            const op2 = await supabase.from('keuangan').insert([{
+                id_sim: dstId, tanggal: date, transaksi: 'Pemasukan', saldo: amount, deskripsi: descDst
+            }]);
+
+            if(op2.error) {
+                Toast.fire({icon:'error', title: 'Gagal tahap 2'});
+            } else {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Transfer Berhasil',
+                    text: `Berhasil transfer Rp ${formatRupiah(amount)}`
+                });
+                resetForm('form-transfer');
+            }
+        }
+
+        // --- 11. PDF DOWNLOAD & SORTING ---
+        function sortData(dir, tableId) {
+            const table = document.getElementById(tableId);
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // Visual feedback buttons
+            const isStorage = tableId === 'table-storage-detail';
+            const btnAsc = document.getElementById(isStorage ? 'sort-asc-storage' : 'sort-asc-btn');
+            const btnDesc = document.getElementById(isStorage ? 'sort-desc-storage' : 'sort-desc-btn');
+            
+            btnAsc.classList.remove('is-sort-active');
+            btnDesc.classList.remove('is-sort-active');
+            
+            if(dir === 'asc') btnAsc.classList.add('is-sort-active');
+            else btnDesc.classList.add('is-sort-active');
+
+            rows.sort((a, b) => {
+                const dateA = new Date(a.cells[0].getAttribute('data-date'));
+                const dateB = new Date(b.cells[0].getAttribute('data-date'));
+                return dir === 'asc' ? dateA - dateB : dateB - dateA;
+            });
+
+            tbody.innerHTML = '';
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        function downloadPDF(tableId, title = "Laporan Keuangan") {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape' }); // Landscape
+            
+            doc.text(title, 14, 15);
+            doc.setFontSize(10);
+            doc.text(`Dicetak pada: ${new Date().toLocaleString()}`, 14, 22);
+
+            // Add Summary to PDF
+            doc.text("Ringkasan:", 14, 30);
+            doc.text(`Bulan Ini - Masuk: ${formatRupiah(summaryStats.mIn)}, Keluar: ${formatRupiah(summaryStats.mOut)}`, 14, 35);
+            doc.text(`Tahun Ini - Masuk: ${formatRupiah(summaryStats.yIn)}, Keluar: ${formatRupiah(summaryStats.yOut)}`, 14, 40);
+
+            doc.autoTable({ 
+                html: '#' + tableId,
+                startY: 45,
+                theme: 'grid',
+                styles: { fontSize: 8, cellWidth: 'wrap' }, // Ensure text wrap
+                headStyles: { fillColor: [17, 103, 177] },
+                columnStyles: { 
+                    3: { cellWidth: 80 } // Force description column width
+                }
+            });
+
+            doc.save('Laporan_Keuangan.pdf');
+        }
+
+        function downloadStoragePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape' }); // Landscape
+            
+            doc.setFontSize(14);
+            doc.text(`Laporan Penyimpanan: ${currentStorageName}`, 14, 15);
+            doc.setFontSize(10);
+            doc.text(`Dicetak pada: ${new Date().toLocaleString()}`, 14, 22);
+            
+            // Add Balance Card Info
+            doc.setFontSize(12);
+            doc.setTextColor(17, 103, 177);
+            doc.text(`Total Saldo Saat Ini: ${formatRupiah(currentStorageBalance)}`, 14, 32);
+            doc.setTextColor(0,0,0);
+            doc.setFontSize(10);
+
+            // Add Summary
+            doc.text(`Bulan Ini - Masuk: ${formatRupiah(summaryStats.mIn)}, Keluar: ${formatRupiah(summaryStats.mOut)}`, 14, 40);
+            doc.text(`Tahun Ini - Masuk: ${formatRupiah(summaryStats.yIn)}, Keluar: ${formatRupiah(summaryStats.yOut)}`, 14, 45);
+
+            doc.autoTable({ 
+                html: '#table-storage-detail',
+                startY: 50,
+                theme: 'grid',
+                styles: { fontSize: 8, cellWidth: 'wrap' },
+                headStyles: { fillColor: [17, 103, 177] },
+                columnStyles: { 
+                    2: { cellWidth: 80 } // Force description column width
+                }
+            });
+
+            doc.save(`Laporan_${currentStorageName}.pdf`);
+        }
+
+        function downloadChartPDF() {
+            const canvas = document.getElementById('financeChart');
+            const canvasImg = canvas.toDataURL("image/png", 1.0);
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape'); // Landscape for better chart view
+
+            doc.setFontSize(14);
+            doc.text("Analisa Keuangan (Grafik)", 14, 15);
+            doc.addImage(canvasImg, 'PNG', 15, 20, 260, 120); // Adjust size
+            doc.save('Grafik_Keuangan.pdf');
+        }
+
+    </script>
+</body>
+</html>
