@@ -333,6 +333,11 @@
             color: #e74c3c;
         }
 
+        /* NEW: Custom Color for Transfer */
+        .has-text-info-custom {
+            color: #3e8ed0; /* Bulma info blue or similar */
+        }
+
         .saldo-card {
             background: linear-gradient(135deg, var(--color-dark-bg), var(--color-primary));
             color: white !important;
@@ -346,7 +351,7 @@
         /* Tabs Vertical */
         .tabs-vertical-container {
             display: grid;
-            grid-template-columns: 200px minmax(0, 1fr);
+            grid-template-columns: 220px minmax(0, 1fr);
             gap: 1.5rem;
             width: 100%;
         }
@@ -442,6 +447,101 @@
             border-color: var(--color-primary);
         }
 
+        /* === CAROUSEL STYLES (DASHBOARD & SIDEBAR) === */
+        .carousel-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .carousel-viewport {
+            overflow: hidden;
+            width: 100%;
+            padding: 8px 0; 
+        }
+        .carousel-track {
+            display: flex;
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            width: 100%;
+        }
+        .carousel-slide {
+            min-width: 100%;
+            box-sizing: border-box;
+            padding: 0 4px; 
+        }
+        
+        /* Unified Carousel Buttons Layout & Design */
+        .sidebar-carousel-controls, 
+        .dashboard-carousel-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem; /* Space between buttons */
+            margin-bottom: 1.25rem;
+            width: 100%;
+            padding: 0 4px; /* Slight padding to align */
+        }
+
+        /* Custom Style for Carousel Buttons (Adaptive Theme) */
+        .sidebar-carousel-controls .button,
+        .dashboard-carousel-controls .button {
+            background-color: var(--card-bg); /* White in Light, Dark Blue in Dark */
+            border: 1px solid var(--input-border);
+            color: var(--text-main);
+            transition: all 0.3s ease;
+            height: 2.2em; /* Compact height */
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        /* Hover State - Active Glow */
+        .sidebar-carousel-controls .button:hover:not(:disabled),
+        .dashboard-carousel-controls .button:hover:not(:disabled) {
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(17, 103, 177, 0.4); /* Glow effect */
+            transform: translateY(-2px);
+        }
+
+        /* Active Click State */
+        .sidebar-carousel-controls .button:active:not(:disabled),
+        .dashboard-carousel-controls .button:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Disabled State - Dimmed and Locked */
+        .sidebar-carousel-controls .button:disabled,
+        .dashboard-carousel-controls .button:disabled {
+            background-color: var(--input-bg);
+            border-color: var(--input-border);
+            color: var(--text-main);
+            cursor: not-allowed;
+            opacity: 0.4;
+            box-shadow: none;
+        }
+
+        /* Dots Indicator */
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 2rem;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--input-border);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .dot.is-active {
+            background-color: var(--color-primary);
+            width: 24px;
+            border-radius: 4px;
+        }
+
         /* Utilities */
         .is-hidden {
             display: none !important;
@@ -525,15 +625,35 @@
                     <div class="center-left-actions is-flex is-align-items-center">
                         <i class="ph ph-wallet mr-4" style="font-size: 2rem;"></i>
                         <div>
-                            <p class="heading">Total Uang (Seluruh Penyimpanan)</p>
+                            <p class="heading">Total Uang Seluruh Penyimpanan</p>
                             <p class="title is-3" id="dash-total-uang">Rp 0</p>
                         </div>
                     </div>
-                    
+
                 </div>
 
-                <!-- Storage Details Cards -->
-                <div class="columns is-multiline" id="dash-storage-cards"></div>
+                <!-- Storage Details Cards (New Carousel Layout) -->
+                <div id="storage-carousel-wrapper" class="carousel-wrapper">
+                    <div class="carousel-viewport">
+                        <div id="dash-storage-track" class="carousel-track">
+                            <!-- Slides will be injected here via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Navigation Buttons (New Grid Layout) -->
+                <div class="dashboard-carousel-controls">
+                    <button class="button is-small" id="dash-prev-btn" onclick="prevSlide()">
+                        <i class="ph ph-caret-left"></i>
+                    </button>
+                    <button class="button is-small" id="dash-next-btn" onclick="nextSlide()">
+                        <i class="ph ph-caret-right"></i>
+                    </button>
+                </div>
+
+                <!-- Pagination Dots -->
+                <div class="carousel-dots" id="carousel-dots"></div>
+
 
                 <!-- Chart -->
                 <div class="card p-4">
@@ -587,9 +707,9 @@
                                     <div class="control toggle-btn-group">
                                         <div class="buttons has-addons is-fullwidth">
                                             <button type="button" class="button is-fullwidth is-selected-success"
-                                                id="btn-in" onclick="setTrxType('Pemasukan')">Pemasukan</button>
+                                                id="btn-in" onclick="setTrxType('Pemasukan')"><b>Pemasukan</b></button>
                                             <button type="button" class="button is-fullwidth" id="btn-out"
-                                                onclick="setTrxType('Pengeluaran')">Pengeluaran</button>
+                                                onclick="setTrxType('Pengeluaran')"><b>Pengeluaran</b></button>
                                         </div>
                                         <input type="hidden" name="trx-type" id="trx-type-input" value="Pemasukan">
                                     </div>
@@ -597,7 +717,7 @@
                             </div>
                             <div class="column is-12">
                                 <div class="field">
-                                    <label class="label">Nominal (Rp)</label>
+                                    <label class="label">Nominal Rupiah</label>
                                     <div class="control has-icons-left">
                                         <input class="input" type="text" id="trx-amount" inputmode="numeric"
                                             placeholder="0" required onkeyup="formatCurrencyInput(this)">
@@ -607,7 +727,7 @@
                             </div>
                             <div class="column is-12">
                                 <div class="field">
-                                    <label class="label">Deskripsi</label>
+                                    <label class="label">Catatan Deskripsi</label>
                                     <div class="control">
                                         <textarea class="textarea" id="trx-desc" placeholder="Keterangan transaksi..."
                                             required rows="2"></textarea>
@@ -682,7 +802,29 @@
                 <div class="tabs-vertical-container">
                     <!-- Left: Navigation / List -->
                     <div class="vertical-tabs" id="storage-tabs">
-                        <a class="is-active" onclick="switchStorageTab('all')">Daftar Penyimpanan (Utama)</a>
+                        <!-- Static 'All' Button -->
+                        <a class="is-active mb-3" onclick="switchStorageTab('all')" style="border-bottom: 2px solid var(--input-border);"><b>Daftar Penyimpanan</b></a>
+                        
+                        <!-- Storage List Carousel (Vertical Items, Horizontal Slide) -->
+                        <div id="nav-carousel-wrapper" class="carousel-wrapper" style="margin-bottom: 0.5rem;">
+                            <div class="carousel-viewport">
+                                <div id="nav-storage-track" class="carousel-track">
+                                    <!-- Slides of storage items injected here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Buttons (External Grid) -->
+                        <div class="sidebar-carousel-controls">
+                            <button class="button is-small" id="nav-prev-btn" onclick="prevNavSlide()">
+                                <i class="ph ph-caret-left"></i>
+                            </button>
+                            <button class="button is-small" id="nav-next-btn" onclick="nextNavSlide()">
+                                <i class="ph ph-caret-right"></i>
+                            </button>
+                        </div>
+
+                        <div class="carousel-dots" id="nav-carousel-dots" style="margin-bottom: 1rem;"></div>
                     </div>
 
                     <!-- Right: Content -->
@@ -782,7 +924,7 @@
                             </div>
                             <div class="column is-6">
                                 <div class="field">
-                                    <label class="label">Dari Penyimpanan (Sumber)</label>
+                                    <label class="label">📤│Dari Sumber Penyimpanan</label>
                                     <div class="control">
                                         <div class="select is-fullwidth">
                                             <select id="trf-source" required>
@@ -794,7 +936,7 @@
                             </div>
                             <div class="column is-6">
                                 <div class="field">
-                                    <label class="label">Ke Penyimpanan (Tujuan)</label>
+                                    <label class="label">📥│Ke Tujuan Penyimpanan</label>
                                     <div class="control">
                                         <div class="select is-fullwidth">
                                             <select id="trf-dest" required>
@@ -816,7 +958,7 @@
                             </div>
                             <div class="column is-6">
                                 <div class="field">
-                                    <label class="label">Catatan Pengirim</label>
+                                    <label class="label">Catatan Sumber Penyimpanan</label>
                                     <div class="control">
                                         <textarea class="textarea" id="trf-desc-source" rows="2"
                                             placeholder="Ex: Transfer ke..." required></textarea>
@@ -825,7 +967,7 @@
                             </div>
                             <div class="column is-6">
                                 <div class="field">
-                                    <label class="label">Catatan Penerima</label>
+                                    <label class="label">Catatan Tujuan Penyimpanan</label>
                                     <div class="control">
                                         <textarea class="textarea" id="trf-desc-dest" rows="2"
                                             placeholder="Ex: Transfer dari..." required></textarea>
@@ -975,7 +1117,9 @@
         </div>
     </div>
 
+
     <script>
+
         // --- 1. SUPABASE CONFIGURATION ---
         const SUPABASE_URL = 'https://gscsuzovbuvckkwukiky.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzY3N1em92YnV2Y2trd3VraWt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwNzcwMjQsImV4cCI6MjA3OTY1MzAyNH0.SyYeUFXJ0MKx_2d5EWoM3W4pqQUomWeqxOsfSwApdz4';
@@ -987,10 +1131,16 @@
         let currentStorageBalance = 0;
         let chartInstance = null;
         let activeFilter = { type: 'currentMonth' };
-        // Track stats globally for PDF use
-        let summaryStats = {
-            mIn: 0, mOut: 0, yIn: 0, yOut: 0
-        };
+        let storageMap = {};
+        let summaryStats = { mIn: 0, mOut: 0, yIn: 0, yOut: 0 };
+
+        // Dashboard Carousel State
+        let currentSlide = 0;
+        let cachedStorageBalances = {};
+
+        // Sidebar Navigation Carousel State
+        let currentNavSlide = 0;
+        let navStorageItems = [];
 
         // --- 3. UI HELPERS & THEME ---
         const Toast = Swal.mixin({
@@ -1068,9 +1218,16 @@
             document.getElementById('trx-date').value = today;
             document.getElementById('trf-date').value = today;
             loadDashboard();
+            
+            // Resize listener for Carousel responsiveness
+            window.addEventListener('resize', () => {
+                if(!document.getElementById('page-dashboard').classList.contains('is-hidden')) {
+                    initDashboardCarousel();
+                }
+            });
         });
 
-        // --- 5. DATA FORMATTING ---
+        // --- 5. DATA FORMATTING & UTILS ---
         function formatRupiah(number) {
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
         }
@@ -1090,22 +1247,32 @@
             return new Date(dateStr).toLocaleDateString('id-ID', options);
         }
 
-        // --- CALCULATE GLOBAL STATS (Monthly/Yearly) ---
+        // Helper to get strictly formatted YYYY-MM-DD strings for filters
+        function getMonthDateRange(year, month) {
+            // Month is 1-12
+            const startStr = `${year}-${String(month).padStart(2, '0')}-01`;
+            const lastDay = new Date(year, month, 0).getDate();
+            const endStr = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
+            return { start: startStr, end: endStr };
+        }
+
+        function getCurrentMonthRange() {
+            const now = new Date();
+            return getMonthDateRange(now.getFullYear(), now.getMonth() + 1);
+        }
+
+        function getYearRange(year) {
+            return { start: `${year}-01-01`, end: `${year}-12-31` };
+        }
+
+        // --- CALCULATE GLOBAL STATS ---
         async function calculateSummaryStats(filterStorageId = null) {
             const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth();
+            const mRange = getCurrentMonthRange();
+            const yRange = getYearRange(now.getFullYear());
 
-            // Current Month Range
-            const startMonth = new Date(year, month, 1).toISOString();
-            const endMonth = new Date(year, month + 1, 0).toISOString();
-
-            // Current Year Range
-            const startYear = new Date(year, 0, 1).toISOString();
-            const endYear = new Date(year, 11, 31).toISOString();
-
-            let qMonth = supabase.from('keuangan').select('saldo, transaksi').gte('tanggal', startMonth).lte('tanggal', endMonth);
-            let qYear = supabase.from('keuangan').select('saldo, transaksi').gte('tanggal', startYear).lte('tanggal', endYear);
+            let qMonth = supabase.from('keuangan').select('saldo, transaksi').gte('tanggal', mRange.start).lte('tanggal', mRange.end);
+            let qYear = supabase.from('keuangan').select('saldo, transaksi').gte('tanggal', yRange.start).lte('tanggal', yRange.end);
 
             if (filterStorageId) {
                 qMonth = qMonth.eq('id_sim', filterStorageId);
@@ -1120,13 +1287,13 @@
             if (resMonth.data) {
                 resMonth.data.forEach(t => {
                     if (t.transaksi === 'Pemasukan') mIn += t.saldo;
-                    else mOut += t.saldo;
+                    else if (t.transaksi === 'Pengeluaran') mOut += t.saldo; 
                 });
             }
             if (resYear.data) {
                 resYear.data.forEach(t => {
                     if (t.transaksi === 'Pemasukan') yIn += t.saldo;
-                    else yOut += t.saldo;
+                    else if (t.transaksi === 'Pengeluaran') yOut += t.saldo; 
                 });
             }
 
@@ -1152,35 +1319,36 @@
             `;
         }
 
-        // --- 6. PAGE LOGIC: DASHBOARD ---
+        // --- 6. PAGE LOGIC: DASHBOARD & CAROUSEL ---
         async function loadDashboard() {
-            const date = new Date();
-            const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
-            const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString();
+            const range = getCurrentMonthRange();
 
             const { data: trxData, error } = await supabase
                 .from('keuangan')
                 .select('*')
-                .gte('tanggal', firstDay)
-                .lte('tanggal', lastDay);
+                .gte('tanggal', range.start)
+                .lte('tanggal', range.end);
 
             if (error) { console.error(error); return; }
 
             let income = 0;
             let expense = 0;
-            const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+            const now = new Date();
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
             const chartLabels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
             const chartDataIncome = new Array(daysInMonth).fill(0);
             const chartDataExpense = new Array(daysInMonth).fill(0);
 
             trxData.forEach(trx => {
                 const day = new Date(trx.tanggal).getDate();
-                if (trx.transaksi === 'Pemasukan') {
-                    income += trx.saldo;
-                    chartDataIncome[day - 1] += trx.saldo;
-                } else {
-                    expense += trx.saldo;
-                    chartDataExpense[day - 1] += trx.saldo;
+                if (day >= 1 && day <= daysInMonth) {
+                    if (trx.transaksi === 'Pemasukan') {
+                        income += trx.saldo;
+                        chartDataIncome[day - 1] += trx.saldo;
+                    } else if (trx.transaksi === 'Pengeluaran') {
+                        expense += trx.saldo;
+                        chartDataExpense[day - 1] += trx.saldo;
+                    }
                 }
             });
 
@@ -1191,37 +1359,130 @@
             const { data: allTrx } = await supabase.from('keuangan').select('id_sim, saldo, transaksi');
 
             let grandTotal = 0;
-            const storageBalances = {};
-            storeData.forEach(s => storageBalances[s.id_sim] = { name: s.namasim, balance: 0 });
+            cachedStorageBalances = {}; // Reset global cache
+            storeData.forEach(s => cachedStorageBalances[s.id_sim] = { name: s.namasim, balance: 0 });
 
-            allTrx.forEach(t => {
-                if (storageBalances[t.id_sim]) {
-                    if (t.transaksi === 'Pemasukan') storageBalances[t.id_sim].balance += t.saldo;
-                    else storageBalances[t.id_sim].balance -= t.saldo;
-                }
-            });
+            if (allTrx) {
+                allTrx.forEach(t => {
+                    if (cachedStorageBalances[t.id_sim]) {
+                        if (t.transaksi === 'Pemasukan') cachedStorageBalances[t.id_sim].balance += t.saldo;
+                        else cachedStorageBalances[t.id_sim].balance -= t.saldo;
+                    }
+                });
+            }
 
-            const container = document.getElementById('dash-storage-cards');
-            container.innerHTML = '';
-
-            for (const [id, store] of Object.entries(storageBalances)) {
+            for (const [id, store] of Object.entries(cachedStorageBalances)) {
                 grandTotal += store.balance;
-                const col = document.createElement('div');
-                col.className = 'column is-3-desktop is-6-tablet';
-                col.innerHTML = `
-                    <div class="card p-3">
-                        <p class="is-size-7 has-text-grey-light">Penyimpanan</p>
-                        <p class="has-text-weight-bold is-size-5 mb-1">${store.name}</p>
-                        <p class="has-text-info">${formatRupiah(store.balance)}</p>
-                    </div>
-                `;
-                container.appendChild(col);
             }
 
             document.getElementById('dash-total-uang').innerText = formatRupiah(grandTotal);
             renderChart(chartLabels, chartDataIncome, chartDataExpense);
+            
+            // Initialize Carousel with Data
+            initDashboardCarousel();
         }
 
+        // --- CAROUSEL LOGIC ---
+        function initDashboardCarousel() {
+            const track = document.getElementById('dash-storage-track');
+            const dotsContainer = document.getElementById('carousel-dots');
+            const width = window.innerWidth;
+            
+            let itemsPerSlide = 8;
+            if (width < 769) itemsPerSlide = 4;
+            else if (width < 1024) itemsPerSlide = 6;
+
+            const storageIds = Object.keys(cachedStorageBalances);
+            const totalItems = storageIds.length;
+            const totalSlides = Math.ceil(totalItems / itemsPerSlide);
+
+            let slidesHTML = '';
+            for (let i = 0; i < totalSlides; i++) {
+                let chunk = storageIds.slice(i * itemsPerSlide, (i + 1) * itemsPerSlide);
+                
+                let gridHTML = `<div class="columns is-multiline is-mobile mt-1">`;
+                
+                chunk.forEach(id => {
+                    const store = cachedStorageBalances[id];
+                    gridHTML += `
+                        <div class="column is-3-desktop is-6-tablet is-12-mobile">
+                            <div class="card p-3 h-100" style="height: 100%;">
+                                <p class="is-size-7 has-text-grey-light">Penyimpanan</p>
+                                <p class="has-text-weight-bold is-size-5 mb-1 is-truncated">${store.name}</p>
+                                <p class="has-text-info font-weight-bold">${formatRupiah(store.balance)}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                gridHTML += `</div>`;
+                slidesHTML += `<div class="carousel-slide">${gridHTML}</div>`;
+            }
+
+            track.innerHTML = slidesHTML;
+            
+            let dotsHTML = '';
+            for(let i=0; i<totalSlides; i++) {
+                dotsHTML += `<div class="dot ${i===0?'is-active':''}" onclick="goToSlide(${i})"></div>`;
+            }
+            dotsContainer.innerHTML = dotsHTML;
+
+            currentSlide = 0;
+            updateCarouselView();
+            updateCarouselControls(totalSlides);
+        }
+
+        function updateCarouselView() {
+            const track = document.getElementById('dash-storage-track');
+            track.style.transform = `translateX(-${currentSlide * 100}%)`;
+            
+            const dots = document.querySelectorAll('#carousel-dots .dot');
+            dots.forEach((d, index) => {
+                if(index === currentSlide) d.classList.add('is-active');
+                else d.classList.remove('is-active');
+            });
+        }
+
+        function nextSlide() {
+            const track = document.getElementById('dash-storage-track');
+            const totalSlides = track.children.length;
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateCarouselView();
+                updateCarouselControls(totalSlides);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateCarouselView();
+                updateCarouselControls(document.getElementById('dash-storage-track').children.length);
+            }
+        }
+
+        function goToSlide(index) {
+            currentSlide = index;
+            updateCarouselView();
+            updateCarouselControls(document.getElementById('dash-storage-track').children.length);
+        }
+
+        function updateCarouselControls(total) {
+            const prevBtn = document.getElementById('dash-prev-btn');
+            const nextBtn = document.getElementById('dash-next-btn');
+            
+            if (prevBtn) prevBtn.disabled = currentSlide === 0;
+            if (nextBtn) nextBtn.disabled = currentSlide === total - 1;
+            
+            // Optional: Hide buttons if only 1 slide exists
+            if(total <= 1) {
+               if(prevBtn) prevBtn.parentElement.style.display = 'none';
+            } else {
+               if(prevBtn) prevBtn.parentElement.style.display = 'grid';
+            }
+        }
+
+        // --- CHART & COLORS ---
         function renderChart(labels, incomeData, expenseData) {
             const ctx = document.getElementById('financeChart').getContext('2d');
             if (chartInstance) chartInstance.destroy();
@@ -1285,39 +1546,37 @@
         // --- 7. PAGE LOGIC: CATATAN (TRANSACTIONS) ---
         async function loadCatatan() {
             const { data: stores } = await supabase.from('penyimpanan').select('*');
+            storageMap = {};
             const select = document.getElementById('trx-storage');
             select.innerHTML = '<option value="" disabled selected>Pilih Penyimpanan</option>';
-            stores.forEach(s => {
-                select.innerHTML += `<option value="${s.id_sim}">${s.namasim}</option>`;
-            });
-
+            if (stores) {
+                stores.forEach(s => {
+                    storageMap[s.id_sim] = s.namasim;
+                    select.innerHTML += `<option value="${s.id_sim}">${s.namasim}</option>`;
+                });
+            }
             activeFilter = { type: 'currentMonth' };
             document.getElementById('table-period-label').innerText = "Data Bulan Ini";
             fetchTransactions();
         }
 
         async function fetchTransactions() {
-            // Calculate stats regardless of current filter
             const stats = await calculateSummaryStats(null);
             renderSummaryText('summary-stats-catatan', stats);
 
-            let query = supabase.from('keuangan').select(`*, penyimpanan (namasim)`);
+            let query = supabase.from('keuangan').select('*');
 
             if (activeFilter.type === 'currentMonth') {
-                const date = new Date();
-                const first = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
-                const last = new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString();
-                query = query.gte('tanggal', first).lte('tanggal', last);
+                const range = getCurrentMonthRange();
+                query = query.gte('tanggal', range.start).lte('tanggal', range.end);
             } else if (activeFilter.type === 'range') {
                 query = query.gte('tanggal', activeFilter.start).lte('tanggal', activeFilter.end);
             } else if (activeFilter.type === 'monthly') {
-                const first = new Date(activeFilter.year, activeFilter.month - 1, 1).toISOString();
-                const last = new Date(activeFilter.year, activeFilter.month, 0).toISOString();
-                query = query.gte('tanggal', first).lte('tanggal', last);
+                const range = getMonthDateRange(activeFilter.year, activeFilter.month);
+                query = query.gte('tanggal', range.start).lte('tanggal', range.end);
             } else if (activeFilter.type === 'yearly') {
-                const first = new Date(activeFilter.year, 0, 1).toISOString();
-                const last = new Date(activeFilter.year, 12, 0).toISOString();
-                query = query.gte('tanggal', first).lte('tanggal', last);
+                const range = getYearRange(activeFilter.year);
+                query = query.gte('tanggal', range.start).lte('tanggal', range.end);
             }
 
             const { data, error } = await query.order('tanggal', { ascending: false });
@@ -1327,25 +1586,45 @@
             const tbody = document.getElementById('tbody-keuangan');
             tbody.innerHTML = '';
 
-            data.forEach(row => {
-                const colorClass = row.transaksi === 'Pemasukan' ? 'has-text-success-custom' : 'has-text-danger-custom';
-                tbody.innerHTML += `
-                    <tr>
-                        <td data-date="${row.tanggal}">${formatDate(row.tanggal)}</td>
-                        <td>${row.penyimpanan ? row.penyimpanan.namasim : '-'}</td>
-                        <td><span class="tag ${row.transaksi === 'Pemasukan' ? 'is-success' : 'is-danger'} is-light">${row.transaksi}</span></td>
-                        <td class="col-desc">${row.deskripsi}</td>
-                        <td class="has-text-right font-weight-bold ${colorClass}">${formatRupiah(row.saldo)}</td>
-                    </tr>
-                `;
-            });
+            if (data && data.length > 0) {
+                data.forEach(row => {
+                    let badgeClass = '';
+                    let textClass = '';
+                    let trxLabel = row.transaksi;
+
+                    if (row.transaksi === 'Pemasukan') {
+                        badgeClass = 'is-success';
+                        textClass = 'has-text-success-custom';
+                    } else if (row.transaksi === 'Pengeluaran') {
+                        badgeClass = 'is-danger';
+                        textClass = 'has-text-danger-custom';
+                    } else if (row.transaksi === 'Transfer') {
+                        badgeClass = 'is-info'; 
+                        textClass = 'has-text-info-custom'; 
+                    }
+                    
+                    const storageName = storageMap[row.id_sim] || 'Tidak Diketahui';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td data-date="${row.tanggal}">${formatDate(row.tanggal)}</td>
+                            <td>${storageName}</td>
+                            <td><span class="tag ${badgeClass} is-light">${trxLabel}</span></td>
+                            <td class="col-desc">${row.deskripsi}</td>
+                            <td class="has-text-right font-weight-bold ${textClass}">${formatRupiah(row.saldo)}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" class="has-text-centered has-text-grey">Belum ada data untuk periode ini</td></tr>';
+            }
         }
 
         async function handleTransactionSubmit(e) {
             e.preventDefault();
             const date = document.getElementById('trx-date').value;
             const storageId = document.getElementById('trx-storage').value;
-            const type = document.getElementById('trx-type-input').value; // from hidden input
+            const type = document.getElementById('trx-type-input').value;
             const amount = unformatRupiah(document.getElementById('trx-amount').value);
             const desc = document.getElementById('trx-desc').value;
 
@@ -1373,7 +1652,7 @@
             const today = new Date().toISOString().split('T')[0];
             if (formId === 'form-transaksi') {
                 document.getElementById('trx-date').value = today;
-                setTrxType('Pemasukan'); // Reset to Pemasukan
+                setTrxType('Pemasukan');
             }
             if (formId === 'form-transfer') document.getElementById('trf-date').value = today;
         }
@@ -1457,16 +1736,110 @@
         // --- 9. PAGE LOGIC: PENYIMPANAN ---
         async function loadPenyimpanan() {
             const { data } = await supabase.from('penyimpanan').select('*').order('id_sim', { ascending: true });
-            const tabs = document.getElementById('storage-tabs');
+            
+            navStorageItems = data || [];
+            
+            // Re-populate map
+            storageMap = {};
+            if (navStorageItems) {
+                navStorageItems.forEach(s => storageMap[s.id_sim] = s.namasim);
+            }
 
-            tabs.innerHTML = `<a class="${currentStorageTabId === null ? 'is-active' : ''}" onclick="switchStorageTab('all')">Daftar Penyimpanan (Utama)</a>`;
-
-            data.forEach(s => {
-                tabs.innerHTML += `<a class="${currentStorageTabId == s.id_sim ? 'is-active' : ''}" onclick="switchStorageTab('${s.id_sim}', '${s.namasim}')">${s.namasim}</a>`;
-            });
+            // Init Sidebar Carousel
+            initStorageNavCarousel();
 
             if (currentStorageTabId === null) fetchStorageList();
             else fetchDetailStorage(currentStorageTabId);
+        }
+
+        function initStorageNavCarousel(preserveState = false) {
+            const track = document.getElementById('nav-storage-track');
+            const dotsContainer = document.getElementById('nav-carousel-dots');
+            
+            const itemsPerSlide = 5;
+            const totalItems = navStorageItems.length;
+            const totalSlides = Math.ceil(totalItems / itemsPerSlide);
+
+            if (!preserveState) {
+                currentNavSlide = 0;
+            }
+            if (currentNavSlide >= totalSlides) currentNavSlide = totalSlides > 0 ? totalSlides - 1 : 0;
+
+            let slidesHTML = '';
+            for (let i = 0; i < totalSlides; i++) {
+                let chunk = navStorageItems.slice(i * itemsPerSlide, (i + 1) * itemsPerSlide);
+                let listHTML = '';
+                
+                chunk.forEach(s => {
+                    const isActive = currentStorageTabId == s.id_sim ? 'is-active' : '';
+                    listHTML += `<a class="${isActive}" onclick="switchStorageTab('${s.id_sim}', '${s.namasim}')">${s.namasim}</a>`;
+                });
+                
+                slidesHTML += `<div class="carousel-slide">${listHTML}</div>`;
+            }
+
+            track.innerHTML = slidesHTML;
+            
+            let dotsHTML = '';
+            if (totalSlides > 1) {
+                for(let i=0; i<totalSlides; i++) {
+                    dotsHTML += `<div class="dot ${i===currentNavSlide?'is-active':''}" onclick="goToNavSlide(${i})"></div>`;
+                }
+            }
+            dotsContainer.innerHTML = dotsHTML;
+
+            updateNavCarouselView();
+            updateNavCarouselControls(totalSlides);
+        }
+
+        function updateNavCarouselView() {
+            const track = document.getElementById('nav-storage-track');
+            track.style.transform = `translateX(-${currentNavSlide * 100}%)`;
+            
+            const dots = document.querySelectorAll('#nav-carousel-dots .dot');
+            dots.forEach((d, index) => {
+                if(index === currentNavSlide) d.classList.add('is-active');
+                else d.classList.remove('is-active');
+            });
+        }
+
+        function nextNavSlide() {
+            const track = document.getElementById('nav-storage-track');
+            const totalSlides = track.children.length;
+            if (currentNavSlide < totalSlides - 1) {
+                currentNavSlide++;
+                updateNavCarouselView();
+                updateNavCarouselControls(totalSlides);
+            }
+        }
+
+        function prevNavSlide() {
+            if (currentNavSlide > 0) {
+                currentNavSlide--;
+                updateNavCarouselView();
+                updateNavCarouselControls(document.getElementById('nav-storage-track').children.length);
+            }
+        }
+
+        function goToNavSlide(index) {
+            currentNavSlide = index;
+            updateNavCarouselView();
+            updateNavCarouselControls(document.getElementById('nav-storage-track').children.length);
+        }
+
+        function updateNavCarouselControls(total) {
+            const prevBtn = document.getElementById('nav-prev-btn');
+            const nextBtn = document.getElementById('nav-next-btn');
+            
+            if (prevBtn) prevBtn.disabled = currentNavSlide === 0;
+            if (nextBtn) nextBtn.disabled = currentNavSlide === total - 1;
+            
+            // Optional: Hide buttons if only 1 slide exists
+            if(total <= 1) {
+               if(prevBtn) prevBtn.parentElement.style.display = 'none';
+            } else {
+               if(prevBtn) prevBtn.parentElement.style.display = 'grid';
+            }
         }
 
         async function fetchStorageList() {
@@ -1474,51 +1847,64 @@
             const { data: trxs } = await supabase.from('keuangan').select('id_sim, saldo, transaksi');
 
             const balances = {};
-            stores.forEach(s => balances[s.id_sim] = 0);
+            if (stores) {
+                stores.forEach(s => balances[s.id_sim] = 0);
+            }
 
-            trxs.forEach(t => {
-                if (balances[t.id_sim] !== undefined) {
-                    if (t.transaksi === 'Pemasukan') balances[t.id_sim] += t.saldo;
-                    else balances[t.id_sim] -= t.saldo;
-                }
-            });
+            if (trxs) {
+                trxs.forEach(t => {
+                    if (balances[t.id_sim] !== undefined) {
+                        if (t.transaksi === 'Pemasukan') balances[t.id_sim] += t.saldo;
+                        else balances[t.id_sim] -= t.saldo;
+                    }
+                });
+            }
 
             const tbody = document.getElementById('tbody-penyimpanan-list');
             tbody.innerHTML = '';
 
-            stores.forEach((s) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>
-                        <button class="button is-small is-info is-light" onclick="openEditStorage('${s.id_sim}', '${s.namasim}')"><i class="ph ph-pencil"></i></button>
-                        <button class="button is-small is-danger is-light" onclick="deleteStorage('${s.id_sim}')"><i class="ph ph-trash"></i></button>
-                    </td>
-                    <td>${s.namasim}</td>
-                    <td class="has-text-right font-weight-bold">${formatRupiah(balances[s.id_sim])}</td>
-                `;
-                tbody.appendChild(tr);
-            });
+            if (stores) {
+                stores.forEach((s) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>
+                            <button class="button is-small is-info is-light" onclick="openEditStorage('${s.id_sim}', '${s.namasim}')"><i class="ph ph-pencil"></i></button>
+                            <button class="button is-small is-danger is-light" onclick="deleteStorage('${s.id_sim}')"><i class="ph ph-trash"></i></button>
+                        </td>
+                        <td>${s.namasim}</td>
+                        <td class="has-text-right font-weight-bold">${formatRupiah(balances[s.id_sim])}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
         }
 
         function switchStorageTab(id, name) {
             currentStorageTabId = id === 'all' ? null : id;
             currentStorageName = name || "";
 
-            document.querySelectorAll('#storage-tabs a').forEach(a => a.classList.remove('is-active'));
+            // Re-render carousel to update active class inside slides
+            // PASS true to preserve current slide position
+            initStorageNavCarousel(true); 
+            
+            // Also handle the static "All" button active state
+            const allBtn = document.querySelector('#storage-tabs > a.is-active'); 
+            // Reset main list active state if moving to a specific storage
+            if (id !== 'all') {
+               if(allBtn) allBtn.classList.remove('is-active');
+            } else {
+               const staticAll = document.querySelector('#storage-tabs > a');
+               if(staticAll) staticAll.classList.add('is-active');
+            }
 
             if (id === 'all') {
                 document.getElementById('storage-view-all').classList.remove('is-hidden');
                 document.getElementById('storage-view-detail').classList.add('is-hidden');
-                loadPenyimpanan();
+                loadPenyimpanan(); // Refresh list
             } else {
                 document.getElementById('storage-view-all').classList.add('is-hidden');
                 document.getElementById('storage-view-detail').classList.remove('is-hidden');
                 document.getElementById('detail-storage-name').innerText = `Riwayat: ${name}`;
-
-                const links = document.querySelectorAll('#storage-tabs a');
-                links.forEach(l => {
-                    if (l.innerText === name) l.classList.add('is-active');
-                });
 
                 activeFilter = { type: 'currentMonth' };
                 fetchDetailStorage(id);
@@ -1526,11 +1912,9 @@
         }
 
         async function fetchDetailStorage(idSim) {
-            // Stats
             const stats = await calculateSummaryStats(idSim);
             renderSummaryText('summary-stats-storage', stats);
 
-            // Total Balance for this storage (All Time)
             const { data: allTimeTrx } = await supabase.from('keuangan').select('saldo, transaksi').eq('id_sim', idSim);
             let bal = 0;
             if (allTimeTrx) {
@@ -1545,20 +1929,16 @@
             let query = supabase.from('keuangan').select('*').eq('id_sim', idSim);
 
             if (activeFilter.type === 'currentMonth') {
-                const date = new Date();
-                const first = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
-                const last = new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString();
-                query = query.gte('tanggal', first).lte('tanggal', last);
+                const range = getCurrentMonthRange();
+                query = query.gte('tanggal', range.start).lte('tanggal', range.end);
             } else if (activeFilter.type === 'range') {
                 query = query.gte('tanggal', activeFilter.start).lte('tanggal', activeFilter.end);
             } else if (activeFilter.type === 'monthly') {
-                const first = new Date(activeFilter.year, activeFilter.month - 1, 1).toISOString();
-                const last = new Date(activeFilter.year, activeFilter.month, 0).toISOString();
-                query = query.gte('tanggal', first).lte('tanggal', last);
+                const range = getMonthDateRange(activeFilter.year, activeFilter.month);
+                query = query.gte('tanggal', range.start).lte('tanggal', range.end);
             } else if (activeFilter.type === 'yearly') {
-                const first = new Date(activeFilter.year, 0, 1).toISOString();
-                const last = new Date(activeFilter.year, 12, 0).toISOString();
-                query = query.gte('tanggal', first).lte('tanggal', last);
+                const range = getYearRange(activeFilter.year);
+                query = query.gte('tanggal', range.start).lte('tanggal', range.end);
             }
 
             const { data, error } = await query.order('tanggal', { ascending: false });
@@ -1566,18 +1946,34 @@
             const tbody = document.getElementById('tbody-storage-detail');
             tbody.innerHTML = '';
 
-            if (data) {
+            if (data && data.length > 0) {
                 data.forEach(row => {
-                    const colorClass = row.transaksi === 'Pemasukan' ? 'has-text-success-custom' : 'has-text-danger-custom';
+                    let badgeClass = '';
+                    let textClass = '';
+                    let trxLabel = row.transaksi;
+
+                    if (row.transaksi === 'Pemasukan') {
+                        badgeClass = 'is-success';
+                        textClass = 'has-text-success-custom';
+                    } else if (row.transaksi === 'Pengeluaran') {
+                        badgeClass = 'is-danger';
+                        textClass = 'has-text-danger-custom';
+                    } else if (row.transaksi === 'Transfer') {
+                        badgeClass = 'is-info';
+                        textClass = 'has-text-info-custom';
+                    }
+
                     tbody.innerHTML += `
                         <tr>
                             <td data-date="${row.tanggal}">${formatDate(row.tanggal)}</td>
-                            <td><span class="tag ${row.transaksi === 'Pemasukan' ? 'is-success' : 'is-danger'} is-light">${row.transaksi}</span></td>
+                            <td><span class="tag ${badgeClass} is-light">${trxLabel}</span></td>
                             <td class="col-desc">${row.deskripsi}</td>
-                            <td class="has-text-right ${colorClass}">${formatRupiah(row.saldo)}</td>
+                            <td class="has-text-right ${textClass}">${formatRupiah(row.saldo)}</td>
                         </tr>
                     `;
                 });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" class="has-text-centered has-text-grey">Belum ada riwayat transaksi</td></tr>';
             }
         }
 
@@ -1640,11 +2036,13 @@
             src.innerHTML = '<option value="" disabled selected>Pilih Sumber</option>';
             dst.innerHTML = '<option value="" disabled selected>Pilih Tujuan</option>';
 
-            stores.forEach(s => {
-                const opt = `<option value="${s.id_sim}">${s.namasim}</option>`;
-                src.innerHTML += opt;
-                dst.innerHTML += opt;
-            });
+            if (stores) {
+                stores.forEach(s => {
+                    const opt = `<option value="${s.id_sim}">${s.namasim}</option>`;
+                    src.innerHTML += opt;
+                    dst.innerHTML += opt;
+                });
+            }
         }
 
         async function handleTransferSubmit(e) {
@@ -1659,7 +2057,6 @@
             if (srcId === dstId) return Toast.fire({ icon: 'error', title: 'Sumber dan Tujuan sama' });
             if (amount <= 0) return Toast.fire({ icon: 'warning', title: 'Nominal salah' });
 
-            // VALIDATION: Check Source Balance
             const { data: trxSource } = await supabase.from('keuangan').select('saldo, transaksi').eq('id_sim', srcId);
             let currentSrcBalance = 0;
             if (trxSource) {
@@ -1677,9 +2074,8 @@
                 });
             }
 
-            // Execute Transfer
             const op1 = await supabase.from('keuangan').insert([{
-                id_sim: srcId, tanggal: date, transaksi: 'Pengeluaran', saldo: amount, deskripsi: descSrc
+                id_sim: srcId, tanggal: date, transaksi: 'Transfer', saldo: amount, deskripsi: descSrc
             }]);
 
             if (op1.error) return Toast.fire({ icon: 'error', title: 'Gagal tahap 1: ' + op1.error.message });
@@ -1706,7 +2102,6 @@
             const tbody = table.querySelector('tbody');
             const rows = Array.from(tbody.querySelectorAll('tr'));
 
-            // Visual feedback buttons
             const isStorage = tableId === 'table-storage-detail';
             const btnAsc = document.getElementById(isStorage ? 'sort-asc-storage' : 'sort-asc-btn');
             const btnDesc = document.getElementById(isStorage ? 'sort-desc-storage' : 'sort-desc-btn');
@@ -1729,13 +2124,12 @@
 
         function downloadPDF(tableId, title = "Laporan Keuangan") {
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: 'landscape' }); // Landscape
+            const doc = new jsPDF({ orientation: 'landscape' });
 
             doc.text(title, 14, 15);
             doc.setFontSize(10);
             doc.text(`Dicetak pada: ${new Date().toLocaleString()}`, 14, 22);
 
-            // Add Summary to PDF
             doc.text("Ringkasan:", 14, 30);
             doc.text(`Bulan Ini - Masuk: ${formatRupiah(summaryStats.mIn)}, Keluar: ${formatRupiah(summaryStats.mOut)}`, 14, 35);
             doc.text(`Tahun Ini - Masuk: ${formatRupiah(summaryStats.yIn)}, Keluar: ${formatRupiah(summaryStats.yOut)}`, 14, 40);
@@ -1744,10 +2138,10 @@
                 html: '#' + tableId,
                 startY: 45,
                 theme: 'grid',
-                styles: { fontSize: 8, cellWidth: 'wrap' }, // Ensure text wrap
+                styles: { fontSize: 8, cellWidth: 'wrap' },
                 headStyles: { fillColor: [17, 103, 177] },
                 columnStyles: {
-                    3: { cellWidth: 80 } // Force description column width
+                    3: { cellWidth: 80 }
                 }
             });
 
@@ -1756,21 +2150,19 @@
 
         function downloadStoragePDF() {
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: 'landscape' }); // Landscape
+            const doc = new jsPDF({ orientation: 'landscape' });
 
             doc.setFontSize(14);
             doc.text(`Laporan Penyimpanan: ${currentStorageName}`, 14, 15);
             doc.setFontSize(10);
             doc.text(`Dicetak pada: ${new Date().toLocaleString()}`, 14, 22);
 
-            // Add Balance Card Info
             doc.setFontSize(12);
             doc.setTextColor(17, 103, 177);
             doc.text(`Total Saldo Saat Ini: ${formatRupiah(currentStorageBalance)}`, 14, 32);
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(10);
 
-            // Add Summary
             doc.text(`Bulan Ini - Masuk: ${formatRupiah(summaryStats.mIn)}, Keluar: ${formatRupiah(summaryStats.mOut)}`, 14, 40);
             doc.text(`Tahun Ini - Masuk: ${formatRupiah(summaryStats.yIn)}, Keluar: ${formatRupiah(summaryStats.yOut)}`, 14, 45);
 
@@ -1781,7 +2173,7 @@
                 styles: { fontSize: 8, cellWidth: 'wrap' },
                 headStyles: { fillColor: [17, 103, 177] },
                 columnStyles: {
-                    2: { cellWidth: 80 } // Force description column width
+                    2: { cellWidth: 80 }
                 }
             });
 
@@ -1792,15 +2184,15 @@
             const canvas = document.getElementById('financeChart');
             const canvasImg = canvas.toDataURL("image/png", 1.0);
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('landscape'); // Landscape for better chart view
+            const doc = new jsPDF('landscape');
 
             doc.setFontSize(14);
             doc.text("Analisa Keuangan (Grafik)", 14, 15);
-            doc.addImage(canvasImg, 'PNG', 15, 20, 260, 120); // Adjust size
+            doc.addImage(canvasImg, 'PNG', 15, 20, 260, 120);
             doc.save('Grafik_Keuangan.pdf');
         }
 
     </script>
-</body>
 
+</body>
 </html>
