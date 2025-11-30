@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Keuangan Pribadi</title>
+
+    <!-- Bulma CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- jsPDF & AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+
+<body>
+
+    <!-- Theme Toggle -->
+    <div class="theme-toggle" onclick="toggleTheme()" title="Ganti Tema">
+        <i class="ph ph-moon" id="theme-icon"></i>
+    </div>
+
+    <!-- Animated Burger Menu -->
+    <div class="burger-menu" onclick="toggleSidebar()" aria-label="Toggle Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <p class="menu-label pl-4">Aplikasi Keuangan</p>
+            <ul class="menu-list">
+                <li><a onclick="navigate('dashboard')" id="nav-dashboard" class="is-active"><i
+                            class="ph ph-squares-four"></i> Dashboard</a></li>
+                <li><a onclick="navigate('catatan')" id="nav-catatan"><i class="ph ph-notebook"></i> Catatan
+                        Transaksi</a></li>
+                <li><a onclick="navigate('penyimpanan')" id="nav-penyimpanan"><i class="ph ph-dresser"></i>
+                        Penyimpanan</a></li>
+                <li><a onclick="navigate('transfer')" id="nav-transfer"><i class="ph ph-arrows-left-right"></i>
+                        Transfer</a></li>
+            </ul>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content-area">
+
+            <!-- PAGE: DASHBOARD -->
+            <div id="page-dashboard">
+                <h1 class="title is-4 mb-5">Dashboard</h1>
+
+                <!-- Summary Cards -->
+                <div class="columns">
+                    <div class="column is-6">
+                        <div class="card p-4">
+                            <div class="is-flex is-align-items-center" style="height: 100%;">
+                                <div class="mr-4">
+                                    <i class="ph ph-trend-up has-text-success-custom is-size-3"></i>
+                                </div>
+                                <div>
+                                    <p class="heading has-text-success-custom mb-0"><b>Pemasukan Bulanan</b></p>
+                                    <p class="title is-5 has-text-success-custom mt-1" id="dash-pemasukan">Rp 0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-6">
+                        <div class="card p-4">
+                            <div class="is-flex is-align-items-center" style="height: 100%;">
+                                <div class="mr-4">
+                                    <i class="ph ph-trend-down has-text-danger-custom is-size-3"></i>
+                                </div>
+                                <div>
+                                    <p class="heading has-text-danger-custom mb-0"><b>Pengeluaran Bulanan</b></p>
+                                    <p class="title is-5 has-text-danger-custom mt-1" id="dash-pengeluaran">Rp 0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card saldo-card p-5 mb-5 ">
+                    <div class="center-left-actions is-flex is-align-items-center">
+                        <i class="ph ph-wallet mr-4" style="font-size: 2rem;"></i>
+                        <div>
+                            <p class="heading">Total Uang Seluruh Penyimpanan</p>
+                            <p class="title is-3" id="dash-total-uang">Rp 0</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Storage Details Cards (New Carousel Layout) -->
+                <div id="storage-carousel-wrapper" class="carousel-wrapper">
+                    <div class="carousel-viewport">
+                        <div id="dash-storage-track" class="carousel-track">
+                            <!-- Slides will be injected here via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Navigation Buttons (New Grid Layout) -->
+                <div class="dashboard-carousel-controls">
+                    <button class="button is-small" id="dash-prev-btn" onclick="prevSlide()">
+                        <i class="ph ph-caret-left"></i>
+                    </button>
+                    <button class="button is-small" id="dash-next-btn" onclick="nextSlide()">
+                        <i class="ph ph-caret-right"></i>
+                    </button>
+                </div>
+
+                <!-- Pagination Dots -->
+                <div class="carousel-dots" id="carousel-dots"></div>
+
+
+                <!-- Chart -->
+                <div class="card p-4">
+                    <div class="level is-mobile mb-2">
+                        <div class="level-left">
+                            <p class="title is-5">Analisa Keuangan (Bulan Ini)</p>
+                        </div>
+                        <div class="level-right">
+                            <button class="button is-small is-ghost" onclick="downloadChartPDF()"><i
+                                    class="ph ph-download-simple is-size-5"></i></button>
+                        </div>
+                    </div>
+                    <div style="position: relative; height:300px; width:100%">
+                        <canvas id="financeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE: CATATAN -->
+            <div id="page-catatan" class="is-hidden">
+                <h1 class="title is-4 mb-5">Catatan Transaksi</h1>
+
+                <!-- Form -->
+                <div class="card p-5 mb-5">
+
+                    <form id="form-transaksi" onsubmit="handleTransactionSubmit(event)">
+                        <div class="columns is-multiline">
+                            <div class="column is-6">
+                                <div class="field">
+                                    <label class="label">Tanggal</label>
+                                    <div class="control">
+                                        <input class="input" type="date" id="trx-date" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-6">
+                                <div class="field">
+                                    <label class="label">Penyimpanan</label>
+                                    <div class="control">
+                                        <div class="select is-fullwidth">
+                                            <select id="trx-storage" required>
+                                                <option value="" disabled selected>Pilih Penyimpanan</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-12">
+                                <div class="field">
+                                    <label class="label">Jenis Transaksi</label>
+                                    <div class="control toggle-btn-group">
+                                        <div class="buttons has-addons is-fullwidth">
+                                            <button type="button" class="button is-fullwidth is-selected-success"
+                                                id="btn-in" onclick="setTrxType('Pemasukan')"><b>Pemasukan</b></button>
+                                            <button type="button" class="button is-fullwidth" id="btn-out"
+                                                onclick="setTrxType('Pengeluaran')"><b>Pengeluaran</b></button>
+                                        </div>
+                                        <input type="hidden" name="trx-type" id="trx-type-input" value="Pemasukan">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-12">
+                                <div class="field">
+                                    <label class="label">Nominal Rupiah</label>
+                                    <div class="control has-icons-left">
+                                        <input class="input" type="text" id="trx-amount" inputmode="numeric"
+                                            placeholder="0" required onkeyup="formatCurrencyInput(this)">
+                                        <span class="icon is-small is-left">Rp</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-12">
+                                <div class="field">
+                                    <label class="label">Catatan Deskripsi</label>
+                                    <div class="control">
+                                        <textarea class="textarea" id="trx-desc" placeholder="Keterangan transaksi..."
+                                            required rows="2"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="buttons is-right">
+                            <button type="submit" class="button is-primary"><i class="ph ph-plus mr-1"></i>
+                                Tambah</button>
+                            <button type="button" class="button is-light" onclick="resetForm('form-transaksi')"><i
+                                    class="ph ph-arrow-counter-clockwise mr-1"></i> Reset</button>
+                            <button type="button" class="button is-warning" onclick="deleteLastTransaction()"><i
+                                    class="ph ph-backspace mr-1"></i> Hapus Terakhir</button>
+                            <button type="button" class="button is-danger" onclick="deleteAllData()"><i
+                                    class="ph ph-trash mr-1"></i> Hapus Semua Data</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Summary Stats -->
+                <div class="summary-text-block" id="summary-stats-catatan"></div>
+
+                <!-- Filters & Table Actions -->
+                <div class="level is-multiline mb-3" style="flex-wrap: wrap; gap: 10px;">
+                    <div class="level-left">
+                        <p class="subtitle is-5 font-weight-bold" id="table-period-label">Data Bulan Ini</p>
+                    </div>
+                    <div class="level-right">
+                        <div class="buttons are-medium">
+                            <button class="button is-info is-light is-medium" id="sort-asc-btn"
+                                onclick="sortData('asc', 'table-keuangan')" title="Ascending"><i
+                                    class="ph ph-arrow-up"></i></button>
+                            <button class="button is-info is-light is-medium" id="sort-desc-btn"
+                                onclick="sortData('desc', 'table-keuangan')" title="Descending"><i
+                                    class="ph ph-arrow-down"></i></button>
+
+                            <button class="button is-info is-light is-medium" onclick="openModal('modal-range')"
+                                title="Rentang Riwayat"><i class="ph ph-calendar-plus"></i></button>
+                            <button class="button is-info is-light is-medium" onclick="openModal('modal-monthly')"
+                                title="Riwayat Bulanan"><i class="ph ph-calendar"></i></button>
+                            <button class="button is-info is-light is-medium" onclick="openModal('modal-yearly')"
+                                title="Riwayat Tahunan"><i class="ph ph-calendar-blank"></i></button>
+                            <button class="button is-link is-medium"
+                                onclick="downloadPDF('table-keuangan', 'Catatan Transaksi')"
+                                title="Unduh PDF Landscape"><i class="ph ph-file-pdf"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="table-container table-responsive-wrapper">
+                    <table class="table is-fullwidth" id="table-keuangan">
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Penyimpanan</th>
+                                <th>Transaksi</th>
+                                <th class="col-desc">Deskripsi</th>
+                                <th class="has-text-right">Saldo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-keuangan"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PAGE: PENYIMPANAN -->
+            <div id="page-penyimpanan" class="is-hidden">
+                <h1 class="title is-4 mb-5">Manajemen Penyimpanan</h1>
+
+                <div class="tabs-vertical-container">
+                    <!-- Left: Navigation / List -->
+                    <div class="vertical-tabs" id="storage-tabs">
+                        <!-- Static 'All' Button -->
+                        <a class="is-active mb-3" onclick="switchStorageTab('all')" style="border-bottom: 2px solid var(--input-border);"><b>Daftar Penyimpanan</b></a>
+                        
+                        <!-- Storage List Carousel (Vertical Items, Horizontal Slide) -->
+                        <div id="nav-carousel-wrapper" class="carousel-wrapper" style="margin-bottom: 0.5rem;">
+                            <div class="carousel-viewport">
+                                <div id="nav-storage-track" class="carousel-track">
+                                    <!-- Slides of storage items injected here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Buttons (External Grid) -->
+                        <div class="sidebar-carousel-controls">
+                            <button class="button is-small" id="nav-prev-btn" onclick="prevNavSlide()">
+                                <i class="ph ph-caret-left"></i>
+                            </button>
+                            <button class="button is-small" id="nav-next-btn" onclick="nextNavSlide()">
+                                <i class="ph ph-caret-right"></i>
+                            </button>
+                        </div>
+
+                        <div class="carousel-dots" id="nav-carousel-dots" style="margin-bottom: 1rem;"></div>
+                    </div>
+
+                    <!-- Right: Content -->
+                    <div class="storage-content">
+                        <!-- Content for 'all' -->
+                        <div id="storage-view-all">
+                            <button class="button is-primary mb-4" onclick="openModal('modal-add-storage')">
+                                <i class="ph ph-plus-circle mr-2"></i> Tambah Simpanan
+                            </button>
+
+                            <div class="table-container table-responsive-wrapper">
+                                <table class="table is-fullwidth" id="table-penyimpanan-list">
+                                    <thead>
+                                        <tr>
+                                            <th>Aksi</th>
+                                            <th>Penyimpanan</th>
+                                            <th class="has-text-right">Total Saldo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-penyimpanan-list"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Content for specific storage -->
+                        <div id="storage-view-detail" class="is-hidden">
+                            <div class="card p-4 mb-4"
+                                style="background: linear-gradient(135deg, var(--color-primary), var(--color-info)); color: white;">
+                                <p class="is-size-7" style="color: #e0f2ff;">Total Saldo Saat Ini</p>
+                                <p class="title is-3" style="color: white;" id="detail-storage-balance">Rp 0</p>
+                            </div>
+
+                            <div class="summary-text-block" id="summary-stats-storage"></div>
+
+                            <!-- IMPROVED BUTTON LAYOUT FOR STORAGE DETAIL -->
+                            <div class="level is-multiline mb-3" style="flex-wrap: wrap; gap: 10px;">
+                                <div class="level-left">
+                                    <h2 class="subtitle is-5" id="detail-storage-name">Nama Simpanan</h2>
+                                </div>
+                                <div class="level-right">
+                                    <div class="buttons are-medium">
+                                        <button class="button is-info is-light is-medium" id="sort-asc-storage"
+                                            onclick="sortData('asc', 'table-storage-detail')"><i
+                                                class="ph ph-arrow-up"></i></button>
+                                        <button class="button is-info is-light is-medium" id="sort-desc-storage"
+                                            onclick="sortData('desc', 'table-storage-detail')"><i
+                                                class="ph ph-arrow-down"></i></button>
+
+                                        <button class="button is-info is-light is-medium"
+                                            onclick="openModal('modal-range')" title="Rentang"><i
+                                                class="ph ph-calendar-plus"></i></button>
+                                        <button class="button is-info is-light is-medium"
+                                            onclick="openModal('modal-monthly')" title="Bulanan"><i
+                                                class="ph ph-calendar"></i></button>
+                                        <button class="button is-info is-light is-medium"
+                                            onclick="openModal('modal-yearly')" title="Tahunan"><i
+                                                class="ph ph-calendar-blank"></i></button>
+                                        <button class="button is-link is-medium" onclick="downloadStoragePDF()"
+                                            title="PDF Landscape"><i class="ph ph-file-pdf"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="table-container table-responsive-wrapper">
+                                <table class="table is-fullwidth" id="table-storage-detail">
+                                    <thead>
+                                        <tr>
+                                            <th>Tanggal</th>
+                                            <th>Transaksi</th>
+                                            <th class="col-desc">Deskripsi</th>
+                                            <th class="has-text-right">Saldo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-storage-detail"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE: TRANSFER -->
+            <div id="page-transfer" class="is-hidden">
+                <h1 class="title is-4 mb-5">Transfer Antar Penyimpanan</h1>
+
+                <div class="card p-5">
+
+                    <form id="form-transfer" onsubmit="handleTransferSubmit(event)">
+                        <div class="columns is-multiline">
+                            <div class="column is-12">
+                                <div class="field">
+                                    <label class="label">Tanggal Transfer</label>
+                                    <div class="control">
+                                        <input class="input" type="date" id="trf-date" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-6">
+                                <div class="field">
+                                    <label class="label">📤│Dari Sumber Penyimpanan</label>
+                                    <div class="control">
+                                        <div class="select is-fullwidth">
+                                            <select id="trf-source" required>
+                                                <option value="" disabled selected>Pilih Sumber</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-6">
+                                <div class="field">
+                                    <label class="label">📥│Ke Tujuan Penyimpanan</label>
+                                    <div class="control">
+                                        <div class="select is-fullwidth">
+                                            <select id="trf-dest" required>
+                                                <option value="" disabled selected>Pilih Tujuan</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-12">
+                                <div class="field">
+                                    <label class="label">Nominal Transfer (Rp)</label>
+                                    <div class="control has-icons-left">
+                                        <input class="input" type="text" id="trf-amount" inputmode="numeric"
+                                            placeholder="0" required onkeyup="formatCurrencyInput(this)">
+                                        <span class="icon is-small is-left">Rp</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-6">
+                                <div class="field">
+                                    <label class="label">Catatan Sumber Penyimpanan</label>
+                                    <div class="control">
+                                        <textarea class="textarea" id="trf-desc-source" rows="2"
+                                            placeholder="Ex: Transfer ke..." required></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-6">
+                                <div class="field">
+                                    <label class="label">Catatan Tujuan Penyimpanan</label>
+                                    <div class="control">
+                                        <textarea class="textarea" id="trf-desc-dest" rows="2"
+                                            placeholder="Ex: Transfer dari..." required></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="buttons is-right">
+                            <button type="submit" class="button is-primary"><i class="ph ph-paper-plane-right mr-2"></i>
+                                Kirim Uang</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODALS -->
+
+    <!-- Modal Rentang -->
+    <div class="modal" id="modal-range">
+        <div class="modal-background" onclick="closeModal('modal-range')"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Filter Rentang Waktu</p>
+                <button class="delete" aria-label="close" onclick="closeModal('modal-range')"></button>
+            </header>
+            <section class="modal-card-body">
+                <div class="field">
+                    <label class="label">Dari Tanggal</label>
+                    <input class="input" type="date" id="filter-start">
+                </div>
+                <div class="field">
+                    <label class="label">Sampai Tanggal</label>
+                    <input class="input" type="date" id="filter-end">
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button" onclick="closeModal('modal-range')">Batal</button>
+                <button class="button is-success" onclick="applyFilter('range')">Ok</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Modal Bulanan -->
+    <div class="modal" id="modal-monthly">
+        <div class="modal-background" onclick="closeModal('modal-monthly')"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Filter Bulanan</p>
+                <button class="delete" aria-label="close" onclick="closeModal('modal-monthly')"></button>
+            </header>
+            <section class="modal-card-body">
+                <div class="field">
+                    <label class="label">Bulan</label>
+                    <div class="select is-fullwidth">
+                        <select id="filter-month-select">
+                            <option value="1">Januari</option>
+                            <option value="2">Februari</option>
+                            <option value="3">Maret</option>
+                            <option value="4">April</option>
+                            <option value="5">Mei</option>
+                            <option value="6">Juni</option>
+                            <option value="7">Juli</option>
+                            <option value="8">Agustus</option>
+                            <option value="9">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Tahun</label>
+                    <input class="input" type="text" inputmode="numeric" id="filter-month-year" placeholder="YYYY">
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button" onclick="closeModal('modal-monthly')">Batal</button>
+                <button class="button is-success" onclick="applyFilter('monthly')">Ok</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Modal Tahunan -->
+    <div class="modal" id="modal-yearly">
+        <div class="modal-background" onclick="closeModal('modal-yearly')"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Filter Tahunan</p>
+                <button class="delete" aria-label="close" onclick="closeModal('modal-yearly')"></button>
+            </header>
+            <section class="modal-card-body">
+                <div class="field">
+                    <label class="label">Tahun</label>
+                    <input class="input" type="text" inputmode="numeric" id="filter-year-input" placeholder="YYYY">
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button" onclick="closeModal('modal-yearly')">Batal</button>
+                <button class="button is-success" onclick="applyFilter('yearly')">Ok</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Penyimpanan -->
+    <div class="modal" id="modal-add-storage">
+        <div class="modal-background" onclick="closeModal('modal-add-storage')"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Tambah Penyimpanan Baru</p>
+                <button class="delete" aria-label="close" onclick="closeModal('modal-add-storage')"></button>
+            </header>
+            <section class="modal-card-body">
+                <div class="field">
+                    <label class="label">Nama Penyimpanan</label>
+                    <input class="input" type="text" id="new-storage-name" placeholder="Masukan Nama Penyimpanan">
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button" onclick="closeModal('modal-add-storage')">Batal</button>
+                <button class="button is-success" onclick="saveNewStorage()">Simpan</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Modal Edit Penyimpanan -->
+    <div class="modal" id="modal-edit-storage">
+        <div class="modal-background" onclick="closeModal('modal-edit-storage')"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Edit Nama Penyimpanan</p>
+                <button class="delete" aria-label="close" onclick="closeModal('modal-edit-storage')"></button>
+            </header>
+            <section class="modal-card-body">
+                <input type="hidden" id="edit-storage-id">
+                <div class="field">
+                    <label class="label">Nama Baru</label>
+                    <input class="input" type="text" id="edit-storage-name">
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button" onclick="closeModal('modal-edit-storage')">Batal</button>
+                <button class="button is-success" onclick="saveEditStorage()">Update</button>
+            </footer>
+        </div>
+    </div>
+
+    <script src="index.js"></script>
+
+</body>
+</html>
